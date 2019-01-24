@@ -28,8 +28,8 @@
 		<jacoco.it.execution.data.file>${project.basedir}/target/jacoco-it.exec</jacoco.it.execution.data.file>
 		<jacoco.ut.execution.data.file>${project.basedir}/target/jacoco-ut.exec</jacoco.ut.execution.data.file>
 		<maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
-		<!--<com.google.guava.version>23.0</com.google.guava.version>
-		<com.googlecode.openpojo.version>0.3.2</com.googlecode.openpojo.version>
+		<com.google.guava.version>23.0</com.google.guava.version>
+		<!--<com.googlecode.openpojo.version>0.3.2</com.googlecode.openpojo.version>
 		<org.apache.commons.version>3.5</org.apache.commons.version>
 		<commons-beanutils.version>1.6</commons-beanutils.version>
 		<org.hibernate-java8.version>5.2.11.Final</org.hibernate-java8.version>
@@ -99,12 +99,12 @@
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
-		<!-- Guava 
+		<!-- Guava -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>${com.google.guava.version}</version>
-		</dependency>-->
+		</dependency>
 		<!-- Apache Commons 
 		<dependency>
 			<groupId>org.apache.commons</groupId>

@@ -70,9 +70,10 @@ management:
     enabled: false
 
 reservations:
+  min-arrival-ahead-days: 1
+  max-advance-time: 30
+  min-duration: 1
   max-duration: 3
-  min-timespan: 1
-  max-timespan: 30
   check-in-time: 12
   check-out-time: 12
 
