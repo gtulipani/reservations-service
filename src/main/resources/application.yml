@@ -1,0 +1,113 @@
+# web
+server:
+  port: 8090
+  use-forward-headers: true
+  tomcat:
+    remote_ip_header: x-forwarded-for
+    max-threads: 20
+
+# database
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/reservations_service?createDatabaseIfNotExist=true
+    username: root
+    password: password
+    max-active: 20
+    max-idle: 20
+    test-while-idle: true
+    test-on-borrow: true
+    validation-query: SELECT 1
+    time-between-eviction-runs-millis: 5000
+    min-evictable-idle-time-millis: 60000
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate
+  data:
+    rest:
+      base-path: /api/v1
+
+signature:
+  validation:
+    use:
+      https: false
+
+flyway:
+  enabled: true
+  clean: false
+  repair: true
+
+feign:
+  hystrix:
+    enabled: false
+
+endpoints:
+  enabled: false
+  info:
+    enabled: true
+    sensitive: false
+  metrics:
+    enabled: true
+    sensitive: false
+  health:
+    enabled: true
+    sensitive: false
+    time-to-live: 5
+
+info:
+  build:
+    name: @project.name@
+    description: @project.description@
+    version: @project.version@
+
+logging:
+  level:
+    ROOT: INFO
+
+management:
+  security:
+    enabled: false
+
+reservations:
+  max-duration: 3
+  min-timespan: 1
+  max-timespan: 30
+  check-in-time: 12
+  check-out-time: 12
+
+---
+
+spring:
+  profiles: test
+  datasource:
+    url: jdbc:h2:mem:reservations_service
+    username: user
+    password: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  h2:
+    console:
+      enabled: true
+      path: /console/
+
+---
+
+spring:
+  profiles: integration
+  datasource:
+    url: jdbc:h2:mem:reservations_service
+    username: user
+    password: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  h2:
+    console:
+      enabled: true
+      path: /console/
+
+---
