@@ -47,6 +47,11 @@ public class ReservationServiceImpl implements ReservationService {
 		return updatedReservation;
 	}
 
+	@Override
+	public void cancelReservation(Reservation reservation) {
+		
+	}
+
 	private Reservation patchReservation(Reservation oldReservation, Reservation newReservation) {
 		if (Objects.nonNull(newReservation.getArrivalDate())) {
 			oldReservation.setArrivalDate(newReservation.getArrivalDate());

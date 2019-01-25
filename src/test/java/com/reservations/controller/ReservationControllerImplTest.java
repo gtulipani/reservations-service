@@ -153,4 +153,45 @@ public class ReservationControllerImplTest {
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);
 	}
+
+	@Test
+	public void testCancelReservation_noErrors() throws Exception {
+		Reservation reservation = basicReservation();
+		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenReturn(reservation);
+
+		ResponseEntity responseEntity = reservationControllerImpl.cancelReservation(reservation.getBookingIdentifierUuid()).call();
+
+		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).cancelReservation(reservation);
+		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+		assertThat(responseEntity.getBody()).isNull();
+	}
+
+	@Test
+	public void testCancelReservation_returnsCorrespondingResponseStatusAndResponseBodyWhenReservationNotFoundExceptionIsThrown() throws Exception {
+		Reservation reservation = basicReservation();
+		ReservationNotFoundException exception = new ReservationNotFoundException(reservation.getBookingIdentifierUuid());
+		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenThrow(exception);
+
+		ResponseEntity responseEntity = reservationControllerImpl.cancelReservation(reservation.getBookingIdentifierUuid()).call();
+
+		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, never()).cancelReservation(any(Reservation.class));
+		assertThat(responseEntity.getStatusCode()).isEqualTo(exception.getResponseStatus());
+		assertThat(responseEntity.getBody()).isEqualTo(exception.getResponseBody());
+	}
+
+	@Test
+	public void testCancelReservation_returnsInternalServerErrorWhenExceptionIsThrownInService() throws Exception {
+		Reservation reservation = basicReservation();
+		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenReturn(reservation);
+		doThrow(new NullPointerException(DEFAULT_ERROR_MESSAGE)).when(reservationService).cancelReservation(reservation);
+
+		ResponseEntity responseEntity = reservationControllerImpl.cancelReservation(reservation.getBookingIdentifierUuid()).call();
+
+		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).cancelReservation(reservation);
+		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);
+	}
 }

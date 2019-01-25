@@ -8,4 +8,6 @@ public interface ReservationService {
 	Reservation getByBookingIdentifierUuid(String bookingIdentifierUuid);
 
 	Reservation updateReservation(Reservation oldReservation, Reservation newReservation);
+
+	void cancelReservation(Reservation reservation);
 }

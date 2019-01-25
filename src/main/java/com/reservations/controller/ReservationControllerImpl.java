@@ -67,4 +67,22 @@ public class ReservationControllerImpl implements ReservationController {
 			}
 		};
 	}
+
+	@Override
+	@RequestMapping(method = RequestMethod.DELETE, value = "/{bookingIdentifierUuid}")
+	public Callable<ResponseEntity> cancelReservation(@PathVariable("bookingIdentifierUuid") String bookingIdentifierUuid) {
+		return () -> {
+			log.info("Received API to cancel reservation with bookingIdentifierUuid={}", bookingIdentifierUuid);
+			try {
+				reservationService.cancelReservation(reservationService.getByBookingIdentifierUuid(bookingIdentifierUuid));
+				return ResponseEntity.noContent().build();
+			} catch (ReservationServiceException e) {
+				log.error("Error cancelling reservation with bookingIdentifierUuid={}, error={}", bookingIdentifierUuid, e.getMessage());
+				return ResponseEntity.status(e.getResponseStatus()).body(e.getResponseBody());
+			} catch (Exception e) {
+				log.error("Error cancelling reservation with bookingIdentifierUuid={}, error={}", bookingIdentifierUuid, e.getMessage());
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+			}
+		};
+	}
 }

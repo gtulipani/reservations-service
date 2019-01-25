@@ -12,4 +12,6 @@ public interface ReservationController {
 	Callable<ResponseEntity> createReservation(@RequestBody Reservation reservation);
 
 	Callable<ResponseEntity> updateReservation(@PathVariable("bookingIdentifierUuid") String bookingIdentifierUuid, @RequestBody Reservation reservation);
+
+	Callable<ResponseEntity> cancelReservation(@PathVariable("bookingIdentifierUuid") String bookingIdentifierUuid);
 }
