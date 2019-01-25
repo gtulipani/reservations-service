@@ -1,17 +1,27 @@
 package com.reservations.validation;
 
+import static com.reservations.validation.ReservationValidatorConstants.ARRIVAL_DATE_FIELD;
+import static com.reservations.validation.ReservationValidatorConstants.DEPARTURE_DATE_FIELD;
+import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_BASE;
+import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MAXIMUM_ADVANCE_DAYS;
+import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MAXIMUM_DURATION;
+import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MINIMUM_AHEAD_DAYS;
+import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MINIMUM_DURATION;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
@@ -21,24 +31,25 @@ import com.reservations.exception.ReservationValidationException;
 @Slf4j
 @Component
 public class ReservationValidator implements Validator<Reservation> {
-	private final static String ARRIVAL_DATE_FIELD = "arrivalDate";
-	private final static String DEPARTURE_DATE_FIELD = "departureDate";
-
 	private final int minimumArrivalAheadDays;
 	private final int maxAdvanceTime;
 	private final int minDuration;
 	private final int maxDuration;
+	private final MessageSource messages;
 	private final List<Predicate<Reservation>> validationsList;
-	private final Set<ReservationValidatorError> errors = Sets.newHashSet();
+
+	private Set<ReservationValidatorError> errors;
 
 	public ReservationValidator(@Value("${reservations.min-arrival-ahead-days}") int minimumArrivalAheadDays,
-								@Value("${reservations.max-advance-time}") int maxAdvanceTime,
+								@Value("${reservations.max-advance-days}") int maxAdvanceTime,
 								@Value("${reservations.min-duration}") int minDuration,
-								@Value("${reservations.max-duration}") int maxDuration) {
+								@Value("${reservations.max-duration}") int maxDuration,
+								@Autowired MessageSource messages) {
 		this.minimumArrivalAheadDays = minimumArrivalAheadDays;
 		this.maxAdvanceTime = maxAdvanceTime;
 		this.minDuration = minDuration;
 		this.maxDuration = maxDuration;
+		this.messages = messages;
 		this.validationsList = Arrays.asList(
 				validateArrivalDateHasMinimumAheadDays(),
 				validateArrivalDateDoesntExceedMaximumAdvanceDays(),
@@ -48,6 +59,7 @@ public class ReservationValidator implements Validator<Reservation> {
 
 	@Override
 	public void validate(Reservation reservation) {
+		errors = Sets.newHashSet();
 		// Can't use anyMatch() or allMatch() because these are short-circuited, and we want to list all the errors
 		if (!validationsList.stream()
 				.map(validation -> validation.test(reservation))
@@ -64,8 +76,8 @@ public class ReservationValidator implements Validator<Reservation> {
 	private Predicate<Reservation> validateArrivalDateHasMinimumAheadDays() {
 		return checkPredicate(reservation -> reservation.getArrivalDate().isBefore(LocalDate.now().plusDays(minimumArrivalAheadDays)),
 				ReservationValidatorError.builder()
-						.fields(Collections.singletonList("arrivalDate"))
-						.description(String.format("Reservation must be created minimum %s days ahead from desired arrival date", minimumArrivalAheadDays))
+						.fields(Collections.singletonList(ARRIVAL_DATE_FIELD))
+						.description(String.format(getMessage(VALIDATION_ERROR_MINIMUM_AHEAD_DAYS), minimumArrivalAheadDays))
 						.build());
 	}
 
@@ -77,7 +89,7 @@ public class ReservationValidator implements Validator<Reservation> {
 		return checkPredicate(reservation -> !reservation.getArrivalDate().isBefore(LocalDate.now().plusDays(maxAdvanceTime)),
 				ReservationValidatorError.builder()
 						.fields(Collections.singletonList(ARRIVAL_DATE_FIELD))
-						.description(String.format("Reservation can be created up to %s days in advance", maxAdvanceTime))
+						.description(String.format(getMessage(VALIDATION_ERROR_MAXIMUM_ADVANCE_DAYS), maxAdvanceTime))
 						.build());
 	}
 
@@ -89,7 +101,7 @@ public class ReservationValidator implements Validator<Reservation> {
 		return checkPredicate(reservation -> DAYS.between(reservation.getArrivalDate(), reservation.getDepartureDate()) < minDuration,
 				ReservationValidatorError.builder()
 						.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
-						.description(String.format("Reservation must include at minimum %s days", minDuration))
+						.description(String.format(getMessage(VALIDATION_ERROR_MINIMUM_DURATION), minDuration))
 						.build());
 	}
 
@@ -101,7 +113,7 @@ public class ReservationValidator implements Validator<Reservation> {
 		return checkPredicate(reservation -> DAYS.between(reservation.getArrivalDate(), reservation.getDepartureDate()) > maxDuration,
 				ReservationValidatorError.builder()
 						.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
-						.description(String.format("Reservation can't exceed %s days", maxDuration))
+						.description(String.format(getMessage(VALIDATION_ERROR_MAXIMUM_DURATION), maxDuration))
 						.build());
 	}
 
@@ -117,5 +129,12 @@ public class ReservationValidator implements Validator<Reservation> {
 			}
 			return true;
 		};
+	}
+
+	/**
+	 * Private method that gets a message from the resource bundle using the specificErrorKey received as parameter
+	 */
+	private String getMessage(String specificErrorKey) {
+		return messages.getMessage(String.format(VALIDATION_ERROR_BASE, specificErrorKey), null, Locale.getDefault());
 	}
 }

@@ -71,7 +71,7 @@ management:
 
 reservations:
   min-arrival-ahead-days: 1
-  max-advance-time: 30
+  max-advance-days: 30
   min-duration: 1
   max-duration: 3
   check-in-time: 12
