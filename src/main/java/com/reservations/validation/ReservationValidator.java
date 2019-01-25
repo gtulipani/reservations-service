@@ -67,6 +67,7 @@ public class ReservationValidator implements Validator<Reservation> {
 				.orElse(Boolean.TRUE)) {
 			throw new ReservationValidationException(errors);
 		}
+		log.info("Successfully validated reservation");
 	}
 
 	/**

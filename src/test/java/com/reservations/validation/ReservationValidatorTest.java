@@ -1,5 +1,7 @@
 package com.reservations.validation;
 
+import static com.reservations.TestUtils.DEFAULT_ERROR_MESSAGE;
+import static com.reservations.TestUtils.basicError;
 import static com.reservations.TestUtils.basicReservation;
 import static com.reservations.validation.ReservationValidatorConstants.ARRIVAL_DATE_FIELD;
 import static com.reservations.validation.ReservationValidatorConstants.DEPARTURE_DATE_FIELD;
@@ -27,7 +29,6 @@ public class ReservationValidatorTest {
 	private static final int MAX_ADVANCE_DAYS = 30;
 	private static final int MIN_DURATION = 1;
 	private static final int MAX_DURATION = 3;
-	private static final String DEFAULT_ERROR_MESSAGE = "Error Message";
 
 	private ReservationValidator reservationValidator;
 
@@ -65,10 +66,7 @@ public class ReservationValidatorTest {
 			reservationValidator.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
-			assertThat(e.getErrors()).containsOnly(ReservationValidatorError.builder()
-					.fields(Collections.singletonList(ARRIVAL_DATE_FIELD))
-					.description(DEFAULT_ERROR_MESSAGE)
-					.build());
+			assertThat(e.getErrors()).containsOnly(basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
 		}
 	}
 
@@ -82,10 +80,7 @@ public class ReservationValidatorTest {
 			reservationValidator.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
-			assertThat(e.getErrors()).containsOnly(ReservationValidatorError.builder()
-					.fields(Collections.singletonList(ARRIVAL_DATE_FIELD))
-					.description(DEFAULT_ERROR_MESSAGE)
-					.build());
+			assertThat(e.getErrors()).containsOnly(basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
 		}
 	}
 
@@ -99,10 +94,7 @@ public class ReservationValidatorTest {
 			reservationValidator.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
-			assertThat(e.getErrors()).containsOnly(ReservationValidatorError.builder()
-					.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
-					.description(DEFAULT_ERROR_MESSAGE)
-					.build());
+			assertThat(e.getErrors()).containsOnly(basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
 		}
 	}
 
@@ -116,10 +108,7 @@ public class ReservationValidatorTest {
 			reservationValidator.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
-			assertThat(e.getErrors()).containsOnly(ReservationValidatorError.builder()
-					.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
-					.description(DEFAULT_ERROR_MESSAGE)
-					.build());
+			assertThat(e.getErrors()).containsOnly(basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
 		}
 	}
 
@@ -134,14 +123,8 @@ public class ReservationValidatorTest {
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsExactlyInAnyOrder(
-					ReservationValidatorError.builder()
-							.fields(Collections.singletonList(ARRIVAL_DATE_FIELD))
-							.description(DEFAULT_ERROR_MESSAGE)
-							.build(),
-					ReservationValidatorError.builder()
-							.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
-							.description(DEFAULT_ERROR_MESSAGE)
-							.build());
+					basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE),
+					basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
 		}
 	}
 
@@ -156,14 +139,8 @@ public class ReservationValidatorTest {
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsExactlyInAnyOrder(
-					ReservationValidatorError.builder()
-							.fields(Collections.singletonList(ARRIVAL_DATE_FIELD))
-							.description(DEFAULT_ERROR_MESSAGE)
-							.build(),
-					ReservationValidatorError.builder()
-							.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
-							.description(DEFAULT_ERROR_MESSAGE)
-							.build());
+					basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE),
+					basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
 		}
 	}
 }

@@ -3,5 +3,9 @@ package com.reservations.service;
 import com.reservations.entity.Reservation;
 
 public interface ReservationService {
-	public Reservation createReservation(Reservation reservation);
+	Reservation createReservation(Reservation reservation);
+
+	Reservation getByBookingIdentifierUuid(String bookingIdentifierUuid);
+
+	Reservation updateReservation(Reservation oldReservation, Reservation newReservation);
 }
