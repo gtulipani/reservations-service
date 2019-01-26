@@ -1,18 +1,27 @@
 package com.reservations.service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Maps;
 import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
+import com.reservations.entity.ReservationAvailability;
 import com.reservations.entity.ReservationStatus;
+import com.reservations.entity.utils.DateUtils;
 import com.reservations.exception.InvalidRangeException;
 import com.reservations.exception.ReservationNotFoundException;
 import com.reservations.extensibility.utils.ExtensionUtils;
@@ -36,10 +45,23 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
+	public Set<ReservationAvailability> getAvailability(LocalDate start, LocalDate end) {
+		checkValidRange(start, end);
+		return getReservationsPerDate(start, end)
+				.entrySet()
+				.stream()
+				.map(entry -> ReservationAvailability.builder()
+						.date(entry.getKey())
+						.availability(entry.getValue())
+						.build())
+				.collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(
+						ReservationAvailability::getDate,
+						LocalDate::compareTo))));
+	}
+
+	@Override
 	public boolean checkAvailability(LocalDate start, LocalDate end) {
-		if (start.isAfter(end)) {
-			throw new InvalidRangeException(start, end);
-		}
+		checkValidRange(start, end);
 		return reservationRepository.findQuantityByDateRangeAndStatus(start, end, ReservationStatus.ACTIVE) < maxCapacity;
 	}
 
@@ -75,6 +97,9 @@ public class ReservationServiceImpl implements ReservationService {
 		log.info("Successfully cancelled reservation={}", reservation);
 	}
 
+	/**
+	 * Private method that updates only the fields are allowed.
+	 */
 	private Reservation patchReservation(Reservation oldReservation, Reservation newReservation) {
 		if (Objects.nonNull(newReservation.getArrivalDate())) {
 			oldReservation.setArrivalDate(newReservation.getArrivalDate());
@@ -83,5 +108,42 @@ public class ReservationServiceImpl implements ReservationService {
 			oldReservation.setDepartureDate(newReservation.getDepartureDate());
 		}
 		return oldReservation;
+	}
+
+	/**
+	 * Private method that fetches the Reservation for a particular date range, applies some operations and returns a
+	 * {@link Map} by {@link LocalDate} and {@link Long}
+	 */
+	private Map<LocalDate, Long> getReservationsPerDate(LocalDate start, LocalDate end) {
+		checkValidRange(start, end);
+		Map<LocalDate, Long> availabilityMap = Maps.newHashMap();
+		int pageNumber = 0;
+		int pageSize = 10;
+		List<Reservation> reservations;
+		do {
+			reservations = reservationRepository.findReservationsByDateRangeAndStatus(start, end, ReservationStatus.ACTIVE, new PageRequest(pageNumber++, pageSize)).getContent();
+			// Map Page<Reservation> to Map<LocalDate, Long> and updates the availabilityMap
+			reservations.stream()
+					.flatMap(reservation -> DateUtils.daysBetween(reservation.getArrivalDate(), reservation.getDepartureDate())
+							.stream())
+					.collect(Collectors.groupingBy(
+							localDate -> localDate,
+							Collectors.reducing(
+									0L,
+									localDate -> 1L,
+									Long::sum
+							)))
+					.forEach((newDate, newQuantity) -> availabilityMap.merge(newDate, newQuantity, Long::sum));
+		} while (!reservations.isEmpty());
+		return availabilityMap;
+	}
+
+	/**
+	 * Checks if the dates range is valid. Otherwise, throws a {@link InvalidRangeException}
+	 */
+	private void checkValidRange(LocalDate start, LocalDate end) {
+		if (start.isAfter(end)) {
+			throw new InvalidRangeException(start, end);
+		}
 	}
 }

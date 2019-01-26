@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -15,16 +16,26 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
+import com.reservations.entity.ReservationAvailability;
 import com.reservations.entity.ReservationStatus;
 import com.reservations.exception.InvalidRangeException;
 import com.reservations.exception.ReservationNotFoundException;
@@ -99,6 +110,54 @@ public class ReservationServiceImplTest {
 			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
 		} catch (InvalidRangeException e) {
 			verify(reservationRepository, never()).findQuantityByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class));
+			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+			assertThat(e.getMessage()).contains(startDate.toString(), endDate.toString());
+		}
+	}
+
+	@Test
+	public void testGetAvailabilityForTodayAndTomorrow_fetchesPagesUntilEmptyAndReturnsAvailabilityForToday() {
+		LocalDate startDate = LocalDate.now();
+		LocalDate endDate = startDate.plusDays(1);
+		Reservation firstReservation = basicReservation();
+		Reservation secondReservation = basicReservation();
+		List<Reservation> reservations = Arrays.asList(firstReservation, secondReservation);
+		// We'll receive a Page<Reservation> only the first time, and then an empty Page
+		when(reservationRepository.findReservationsByDateRangeAndStatus(eq(startDate), eq(endDate), eq(ReservationStatus.ACTIVE), any(Pageable.class)))
+				.thenAnswer(new Answer<Object>() {
+						private int callNumber = 0;
+			
+						@Override
+						public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+							Pageable pageable = new PageRequest(callNumber, 10);
+							if (callNumber == 0) {
+								callNumber++;
+								return new PageImpl<>(reservations, pageable, reservations.size()
+								);
+							} else {
+								return new PageImpl<>(Lists.newArrayList(), pageable, 0);
+							}
+						}});
+
+		Set<ReservationAvailability> availabilitySet = reservationService.getAvailability(startDate, endDate);
+
+		verify(reservationRepository, times(2)).findReservationsByDateRangeAndStatus(eq(startDate), eq(endDate), eq(ReservationStatus.ACTIVE), any(Pageable.class));
+		assertThat(availabilitySet).containsOnlyOnce(ReservationAvailability.builder()
+						.date(firstReservation.getArrivalDate())
+						.availability(2L)
+						.build());
+	}
+
+	@Test
+	public void testGetAvailabilityWithInvalidRange_throwsInvalidRangeException() {
+		LocalDate startDate = LocalDate.now();
+		LocalDate endDate = startDate.minusDays(1);
+
+		try {
+			reservationService.getAvailability(startDate, endDate);
+			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
+		} catch (InvalidRangeException e) {
+			verify(reservationRepository, never()).findReservationsByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class), any(Pageable.class));
 			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
 			assertThat(e.getMessage()).contains(startDate.toString(), endDate.toString());
 		}

@@ -70,6 +70,7 @@ management:
     enabled: false
 
 reservations:
+  availability-default-days: 30
   min-arrival-ahead-days: 1
   max-advance-days: 30
   min-duration: 1

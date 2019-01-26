@@ -37,4 +37,27 @@ public class DateUtilsTest {
 
 		assertThat(DateUtils.toTimestamp(localDateTime)).isNull();
 	}
+
+	@Test
+	public void testDaysBetweenTodayAndTomorrow_doesntIncludeTomorrow() {
+		LocalDate today = LocalDate.now();
+		LocalDate tomorrow = today.plusDays(1);
+
+		assertThat(DateUtils.daysBetween(today, tomorrow)).containsOnlyOnce(today);
+	}
+
+	@Test
+	public void testDaysBetweenTodayAndToday_includesToday() {
+		LocalDate today = LocalDate.now();
+
+		assertThat(DateUtils.daysBetween(today, today)).containsOnlyOnce(today);
+	}
+
+	@Test
+	public void testDaysBetweenTodayAndYesterday_isEmpty() {
+		LocalDate today = LocalDate.now();
+		LocalDate yesterday = today.minusDays(1);
+
+		assertThat(DateUtils.daysBetween(today, yesterday)).isEmpty();
+	}
 }

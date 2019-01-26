@@ -13,6 +13,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import java.time.LocalDate;
+
 import org.mockito.Mock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +24,14 @@ import org.testng.annotations.Test;
 import com.google.common.collect.Sets;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationStatus;
+import com.reservations.exception.InvalidRangeException;
 import com.reservations.exception.ReservationNotFoundException;
 import com.reservations.exception.ReservationValidationException;
 import com.reservations.service.ReservationService;
 
 public class ReservationControllerImplTest {
+	private static final int AVAILABILITY_DEFAULT_DAYS = 30;
+
 	@Mock
 	private ReservationService reservationService;
 
@@ -36,7 +41,34 @@ public class ReservationControllerImplTest {
 	public void setup() {
 		initMocks(this);
 
-		reservationControllerImpl = new ReservationControllerImpl(reservationService);
+		reservationControllerImpl = new ReservationControllerImpl(reservationService, AVAILABILITY_DEFAULT_DAYS);
+	}
+
+	@Test
+	public void testGetAvailability_returnsCorrespondingResponseStatusAndResponseBodyWhenInvalidRangeExceptionIsThrown() throws Exception {
+		LocalDate start = LocalDate.now();
+		LocalDate end = start.plusDays(AVAILABILITY_DEFAULT_DAYS);
+		InvalidRangeException exception = new InvalidRangeException(start, end);
+		when(reservationService.getAvailability(start, end)).thenThrow(exception);
+
+		ResponseEntity responseEntity = reservationControllerImpl.getAvailability(start, end).call();
+
+		verify(reservationService, times(1)).getAvailability(start, end);
+		assertThat(responseEntity.getStatusCode()).isEqualByComparingTo(exception.getResponseStatus());
+		assertThat(responseEntity.getBody()).isEqualTo(exception.getResponseBody());
+	}
+
+	@Test
+	public void testGetAvailability_returnsInternalServerErrorWhenExceptionIsThrownInService() throws Exception {
+		LocalDate start = LocalDate.now();
+		LocalDate end = start.plusDays(AVAILABILITY_DEFAULT_DAYS);
+		when(reservationService.getAvailability(start, end)).thenThrow(new NullPointerException(DEFAULT_ERROR_MESSAGE));
+
+		ResponseEntity responseEntity = reservationControllerImpl.getAvailability(start, end).call();
+
+		verify(reservationService, times(1)).getAvailability(start, end);
+		assertThat(responseEntity.getStatusCode()).isEqualByComparingTo(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);
 	}
 
 	@Test
@@ -47,7 +79,7 @@ public class ReservationControllerImplTest {
 		ResponseEntity responseEntity = reservationControllerImpl.createReservation(reservation).call();
 
 		verify(reservationService, times(1)).createReservation(reservation);
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 		assertThat(responseEntity.getBody()).isEqualTo(reservation);
 	}
 
