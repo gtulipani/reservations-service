@@ -4,6 +4,7 @@ import static com.reservations.validation.ReservationValidatorConstants.ARRIVAL_
 import static com.reservations.validation.ReservationValidatorConstants.DEPARTURE_DATE_FIELD;
 import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_BASE;
 import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MAXIMUM_ADVANCE_DAYS;
+import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MAXIMUM_CAPACITY;
 import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MAXIMUM_DURATION;
 import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MINIMUM_AHEAD_DAYS;
 import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_MINIMUM_DURATION;
@@ -24,6 +25,7 @@ import org.springframework.context.MessageSource;
 import com.google.common.collect.Sets;
 import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
+import com.reservations.service.ReservationService;
 
 /**
  * Intermediary class that has the logic to validate all the business rules applicable to Reservations
@@ -34,6 +36,7 @@ public abstract class ReservationCompleteValidatorExtension implements Reservati
 	private final int maxAdvanceTime;
 	private final int minDuration;
 	private final int maxDuration;
+	private final ReservationService reservationService;
 	private final MessageSource messages;
 	private final List<Predicate<Reservation>> validationsList;
 
@@ -41,19 +44,22 @@ public abstract class ReservationCompleteValidatorExtension implements Reservati
 
 	public ReservationCompleteValidatorExtension(int minimumArrivalAheadDays,
 												 int maxAdvanceTime,
-												 int minDuration, 
-												 int maxDuration, 
+												 int minDuration,
+												 int maxDuration,
+												 ReservationService reservationService,
 												 MessageSource messages) {
 		this.minimumArrivalAheadDays = minimumArrivalAheadDays;
 		this.maxAdvanceTime = maxAdvanceTime;
 		this.minDuration = minDuration;
 		this.maxDuration = maxDuration;
+		this.reservationService = reservationService;
 		this.messages = messages;
 		this.validationsList = Arrays.asList(
 				validateArrivalDateHasMinimumAheadDays(),
 				validateArrivalDateDoesntExceedMaximumAdvanceDays(),
 				validateMinimumDuration(),
-				validateMaximumDuration());
+				validateMaximumDuration(),
+				validateCampsiteAvailability());
 	}
 
 	@Override
@@ -114,6 +120,18 @@ public abstract class ReservationCompleteValidatorExtension implements Reservati
 				ReservationValidatorError.builder()
 						.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
 						.description(String.format(getMessage(VALIDATION_ERROR_MAXIMUM_DURATION), maxDuration))
+						.build());
+	}
+
+	/**
+	 * Predicate that checks that the campsite is available in the range starting in {@link Reservation#arrivalDate}
+	 * and finishing in {@link Reservation#departureDate}.
+	 */
+	private Predicate<Reservation> validateCampsiteAvailability() {
+		return checkPredicate(reservation -> !reservationService.checkAvailability(reservation.getArrivalDate(), reservation.getDepartureDate()),
+				ReservationValidatorError.builder()
+						.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
+						.description(getMessage(VALIDATION_ERROR_MAXIMUM_CAPACITY))
 						.build());
 	}
 

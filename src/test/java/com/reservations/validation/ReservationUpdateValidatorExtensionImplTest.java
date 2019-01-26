@@ -12,6 +12,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.reservations.entity.EventType;
+import com.reservations.service.ReservationService;
 
 public class ReservationUpdateValidatorExtensionImplTest {
 	private static final int MIN_ARRIVAL_AHEAD_DAYS = 1;
@@ -21,6 +22,8 @@ public class ReservationUpdateValidatorExtensionImplTest {
 
 	private ReservationUpdateValidatorExtensionImpl reservationUpdateValidatorExtension;
 
+	@Mock
+	private ReservationService reservationService;
 	@Mock
 	private MessageSource messages;
 
@@ -35,6 +38,7 @@ public class ReservationUpdateValidatorExtensionImplTest {
 				MAX_ADVANCE_DAYS,
 				MIN_DURATION,
 				MAX_DURATION,
+				reservationService,
 				messages);
 	}
 

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
+import com.reservations.service.ReservationService;
 
 /**
  * Validator for the {@link Reservation} entity for a {@link EventType#UPDATE}
@@ -20,8 +21,9 @@ public class ReservationUpdateValidatorExtensionImpl extends ReservationComplete
 													 @Value("${reservations.max-advance-days}") int maxAdvanceTime,
 													 @Value("${reservations.min-duration}") int minDuration,
 													 @Value("${reservations.max-duration}") int maxDuration,
+													 @Autowired ReservationService reservationService,
 													 @Autowired MessageSource messages) {
-		super(minimumArrivalAheadDays, maxAdvanceTime, minDuration, maxDuration, messages);
+		super(minimumArrivalAheadDays, maxAdvanceTime, minDuration, maxDuration, reservationService, messages);
 	}
 
 	@Override

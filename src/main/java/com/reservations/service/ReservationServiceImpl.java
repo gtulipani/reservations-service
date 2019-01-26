@@ -1,11 +1,13 @@
 package com.reservations.service;
 
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.reservations.entity.EventType;
@@ -21,11 +23,20 @@ import com.reservations.validation.ReservationValidatorExtension;
 public class ReservationServiceImpl implements ReservationService {
 	private final ReservationRepository reservationRepository;
 	private final Set<ReservationValidatorExtension> reservationValidatorExtensions;
+	private final int maxCapacity;
 
 	@Autowired
-	public ReservationServiceImpl(ReservationRepository reservationRepository, Set<ReservationValidatorExtension> reservationValidatorExtensions) {
+	public ReservationServiceImpl(ReservationRepository reservationRepository,
+								  Set<ReservationValidatorExtension> reservationValidatorExtensions,
+								  @Value("${reservations.max-capacity}") int maxCapacity) {
 		this.reservationRepository = reservationRepository;
 		this.reservationValidatorExtensions = reservationValidatorExtensions;
+		this.maxCapacity = maxCapacity;
+	}
+
+	@Override
+	public boolean checkAvailability(LocalDate start, LocalDate end) {
+		return true;
 	}
 
 	@Override

@@ -35,6 +35,8 @@ import com.reservations.validation.ReservationCreationValidatorExtensionImpl;
 import com.reservations.validation.ReservationUpdateValidatorExtensionImpl;
 
 public class ReservationServiceImplTest {
+	private static final int MAX_CAPACITY = 10;
+
 	@Mock
 	private ReservationRepository reservationRepository;
 	@Mock
@@ -52,11 +54,13 @@ public class ReservationServiceImplTest {
 	public void setup() {
 		initMocks(this);
 
-		reservationService = new ReservationServiceImpl(reservationRepository, Sets.newHashSet(
-				defaultReservationValidatorExtension,
-				reservationCreationValidatorExtension,
-				reservationUpdateValidatorExtension,
-				reservationCancellationValidatorExtension));
+		reservationService = new ReservationServiceImpl(reservationRepository,
+				Sets.newHashSet(
+						defaultReservationValidatorExtension,
+						reservationCreationValidatorExtension,
+						reservationUpdateValidatorExtension,
+						reservationCancellationValidatorExtension),
+				MAX_CAPACITY);
 	}
 
 	@Test

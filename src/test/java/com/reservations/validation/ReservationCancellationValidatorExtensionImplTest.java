@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
+import com.reservations.service.ReservationServiceImpl;
 
 public class ReservationCancellationValidatorExtensionImplTest {
 	private static final int CHECK_IN_TIME_HOUR = 12;
@@ -33,6 +34,8 @@ public class ReservationCancellationValidatorExtensionImplTest {
 
 	private ReservationCancellationValidatorExtensionImpl reservationCancellationValidatorExtension;
 
+	@Mock
+	private ReservationServiceImpl reservationService;
 	@Mock
 	private MessageSource messages;
 
@@ -49,6 +52,7 @@ public class ReservationCancellationValidatorExtensionImplTest {
 				MAX_ADVANCE_DAYS,
 				MIN_DURATION,
 				MAX_DURATION,
+				reservationService,
 				messages);
 	}
 
@@ -99,6 +103,7 @@ public class ReservationCancellationValidatorExtensionImplTest {
 				MAX_ADVANCE_DAYS,
 				MIN_DURATION,
 				MAX_DURATION,
+				reservationService,
 				messages);
 
 		try {

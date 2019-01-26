@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 
 import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
+import com.reservations.service.ReservationServiceImpl;
 
 /**
  * Altough {@link ReservationCompleteValidatorExtension} is an abstract class, it has some methods implemented.
@@ -36,6 +37,8 @@ public class ReservationCompleteValidatorExtensionTest {
 	private ReservationCompleteValidatorExtension reservationCompleteValidatorExtension;
 
 	@Mock
+	private ReservationServiceImpl reservationService;
+	@Mock
 	private MessageSource messages;
 
 	@BeforeMethod
@@ -49,6 +52,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				MAX_ADVANCE_DAYS,
 				MIN_DURATION,
 				MAX_DURATION,
+				reservationService,
 				messages);
 	}
 
@@ -57,6 +61,7 @@ public class ReservationCompleteValidatorExtensionTest {
 		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS - 1);
 		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -71,6 +76,7 @@ public class ReservationCompleteValidatorExtensionTest {
 		LocalDate arrivalDate = LocalDate.now().plusDays(MAX_ADVANCE_DAYS + 1);
 		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -85,6 +91,7 @@ public class ReservationCompleteValidatorExtensionTest {
 		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS);
 		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION - 1);
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -99,6 +106,7 @@ public class ReservationCompleteValidatorExtensionTest {
 		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS);
 		LocalDate departureDate = arrivalDate.plusDays(MAX_DURATION + 1);
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -113,6 +121,7 @@ public class ReservationCompleteValidatorExtensionTest {
 		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS - 1);
 		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION - 1);
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -129,6 +138,7 @@ public class ReservationCompleteValidatorExtensionTest {
 		LocalDate arrivalDate = LocalDate.now().plusDays(MAX_ADVANCE_DAYS + 1);
 		LocalDate departureDate = arrivalDate.plusDays(MAX_DURATION + 1);
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -137,6 +147,21 @@ public class ReservationCompleteValidatorExtensionTest {
 			assertThat(e.getErrors()).containsExactlyInAnyOrder(
 					basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE),
 					basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
+		}
+	}
+
+	@Test
+	public void testReservationWithoutAvailability_throwsReservationValidationException() {
+		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS);
+		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
+		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(false);
+
+		try {
+			reservationCompleteValidatorExtension.validate(reservation);
+			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
+		} catch (ReservationValidationException e) {
+			assertThat(e.getErrors()).containsOnly(basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
 		}
 	}
 }
