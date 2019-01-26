@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Collections;
 
 import org.mockito.Mock;
@@ -23,6 +24,8 @@ import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
 
 public class ReservationCancellationValidatorExtensionImplTest {
+	private static final int CHECK_IN_TIME_HOUR = 12;
+	private static final int CHECK_IN_TIME_MINUTE = 0;
 	private static final int MIN_ARRIVAL_AHEAD_DAYS = 1;
 	private static final int MAX_ADVANCE_DAYS = 30;
 	private static final int MIN_DURATION = 1;
@@ -40,6 +43,8 @@ public class ReservationCancellationValidatorExtensionImplTest {
 		when(messages.getMessage(any(), any(), any())).thenReturn(DEFAULT_ERROR_MESSAGE);
 
 		reservationCancellationValidatorExtension = new ReservationCancellationValidatorExtensionImpl(
+				CHECK_IN_TIME_HOUR,
+				CHECK_IN_TIME_MINUTE,
 				MIN_ARRIVAL_AHEAD_DAYS,
 				MAX_ADVANCE_DAYS,
 				MIN_DURATION,
@@ -68,10 +73,33 @@ public class ReservationCancellationValidatorExtensionImplTest {
 	}
 
 	@Test
-	public void testReservationCancellationAfterItStarted_throwsReservationValidationException() {
+	public void testReservationCancellationOneDayAfterItStarted_throwsReservationValidationException() {
 		LocalDate arrivalDate = LocalDate.now().minusDays(1);
 		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
+
+		try {
+			reservationCancellationValidatorExtension.validate(reservation);
+			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
+		} catch (ReservationValidationException e) {
+			assertThat(e.getErrors()).containsOnly(basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
+		}
+	}
+
+	@Test
+	public void testReservationCancellationSameDayAfterCheckInTime_throwsReservationValidationException() {
+		LocalDate arrivalDate = LocalDate.now();
+		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
+		Reservation reservation = basicReservation(arrivalDate, departureDate);
+		LocalTime newCheckInTime = LocalTime.now().minusMinutes(1);
+		reservationCancellationValidatorExtension = new ReservationCancellationValidatorExtensionImpl(
+				newCheckInTime.getHour(),
+				newCheckInTime.getMinute(),
+				MIN_ARRIVAL_AHEAD_DAYS,
+				MAX_ADVANCE_DAYS,
+				MIN_DURATION,
+				MAX_DURATION,
+				messages);
 
 		try {
 			reservationCancellationValidatorExtension.validate(reservation);

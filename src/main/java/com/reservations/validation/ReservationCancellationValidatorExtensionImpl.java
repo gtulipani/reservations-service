@@ -3,7 +3,9 @@ package com.reservations.validation;
 import static com.reservations.validation.ReservationValidatorConstants.ARRIVAL_DATE_FIELD;
 import static com.reservations.validation.ReservationValidatorConstants.VALIDATION_ERROR_RESERVATION_ALREADY_STARTED;
 
+import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Collections;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +26,17 @@ import com.reservations.exception.ReservationValidationException;
 @Slf4j
 @Component
 public class ReservationCancellationValidatorExtensionImpl extends ReservationCompleteValidatorExtension {
-	public ReservationCancellationValidatorExtensionImpl(@Value("${reservations.min-arrival-ahead-days}") int minimumArrivalAheadDays,
-													 @Value("${reservations.max-advance-days}") int maxAdvanceTime,
-													 @Value("${reservations.min-duration}") int minDuration,
-													 @Value("${reservations.max-duration}") int maxDuration,
-													 @Autowired MessageSource messages) {
+	private final LocalTime checkinTime;
+
+	public ReservationCancellationValidatorExtensionImpl(@Value("${reservations.check-in-time-hour}") int checkInTimeHour,
+														 @Value("${reservations.check-in-time-minute}") int checkInTimeMinute,
+														 @Value("${reservations.min-arrival-ahead-days}") int minimumArrivalAheadDays,
+														 @Value("${reservations.max-advance-days}") int maxAdvanceTime,
+														 @Value("${reservations.min-duration}") int minDuration,
+														 @Value("${reservations.max-duration}") int maxDuration,
+														 @Autowired MessageSource messages) {
 		super(minimumArrivalAheadDays, maxAdvanceTime, minDuration, maxDuration, messages);
+		this.checkinTime = LocalTime.of(checkInTimeHour, checkInTimeMinute);
 	}
 
 	@Override
@@ -41,14 +48,26 @@ public class ReservationCancellationValidatorExtensionImpl extends ReservationCo
 	public boolean supports(EventType eventType) {
 		return EventType.CANCELLATION.equals(eventType);
 	}
-	
+
 	@Override
 	public void validate(Reservation reservation) {
-		if (reservation.getArrivalDate().isBefore(LocalDate.now())) {
+		if (reservationAlreadyStarted(reservation)) {
 			throw new ReservationValidationException(Sets.newHashSet(ReservationValidatorError.builder()
 					.fields(Collections.singletonList(ARRIVAL_DATE_FIELD))
 					.description(getMessage(VALIDATION_ERROR_RESERVATION_ALREADY_STARTED))
 					.build()));
 		}
+	}
+
+	/**
+	 * Checks if the reservation already started. This means one of the following cases:
+	 * - {@link Reservation#arrivalDate} is before today's date
+	 * - {@link Reservation#arrivalDate} is today and {@link #checkinTime} already passed
+	 */
+	private boolean reservationAlreadyStarted(Reservation reservation) {
+		LocalDate today = LocalDate.now();
+		LocalDate arrivalDate = reservation.getArrivalDate();
+		return (today.isAfter(arrivalDate)) ||
+				(today.isEqual(arrivalDate) && (LocalTime.now().isAfter(checkinTime)));
 	}
 }

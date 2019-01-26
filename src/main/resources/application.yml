@@ -74,8 +74,8 @@ reservations:
   max-advance-days: 30
   min-duration: 1
   max-duration: 3
-  check-in-time: 12
-  check-out-time: 12
+  check-in-time-hour: 12
+  check-in-time-minute: 0
 
 ---
 
