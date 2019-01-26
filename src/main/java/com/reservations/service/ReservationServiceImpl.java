@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationStatus;
+import com.reservations.exception.InvalidRangeException;
 import com.reservations.exception.ReservationNotFoundException;
 import com.reservations.extensibility.utils.ExtensionUtils;
 import com.reservations.repository.ReservationRepository;
@@ -23,12 +24,12 @@ import com.reservations.validation.ReservationValidatorExtension;
 public class ReservationServiceImpl implements ReservationService {
 	private final ReservationRepository reservationRepository;
 	private final Set<ReservationValidatorExtension> reservationValidatorExtensions;
-	private final int maxCapacity;
+	private final long maxCapacity;
 
 	@Autowired
 	public ReservationServiceImpl(ReservationRepository reservationRepository,
 								  Set<ReservationValidatorExtension> reservationValidatorExtensions,
-								  @Value("${reservations.max-capacity}") int maxCapacity) {
+								  @Value("${reservations.max-capacity}") long maxCapacity) {
 		this.reservationRepository = reservationRepository;
 		this.reservationValidatorExtensions = reservationValidatorExtensions;
 		this.maxCapacity = maxCapacity;
@@ -36,7 +37,10 @@ public class ReservationServiceImpl implements ReservationService {
 
 	@Override
 	public boolean checkAvailability(LocalDate start, LocalDate end) {
-		return true;
+		if (start.isAfter(end)) {
+			throw new InvalidRangeException(start, end);
+		}
+		return reservationRepository.findQuantityByDateRangeAndStatus(start, end, ReservationStatus.ACTIVE) < maxCapacity;
 	}
 
 	@Override

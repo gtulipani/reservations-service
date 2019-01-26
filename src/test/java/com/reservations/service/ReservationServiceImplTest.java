@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.mockito.Mock;
@@ -25,6 +26,7 @@ import com.google.common.collect.Sets;
 import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationStatus;
+import com.reservations.exception.InvalidRangeException;
 import com.reservations.exception.ReservationNotFoundException;
 import com.reservations.exception.ReservationValidationException;
 import com.reservations.exception.extension.ExtensionNotFoundException;
@@ -35,7 +37,7 @@ import com.reservations.validation.ReservationCreationValidatorExtensionImpl;
 import com.reservations.validation.ReservationUpdateValidatorExtensionImpl;
 
 public class ReservationServiceImplTest {
-	private static final int MAX_CAPACITY = 10;
+	private static final long MAX_CAPACITY = 10L;
 
 	@Mock
 	private ReservationRepository reservationRepository;
@@ -61,6 +63,45 @@ public class ReservationServiceImplTest {
 						reservationUpdateValidatorExtension,
 						reservationCancellationValidatorExtension),
 				MAX_CAPACITY);
+	}
+
+	@Test
+	public void testCheckAvailability_returnsTrue() {
+		LocalDate startDate = LocalDate.now();
+		LocalDate endDate = startDate.plusDays(1);
+		when(reservationRepository.findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY - 1);
+
+		boolean available = reservationService.checkAvailability(startDate, endDate);
+
+		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE);
+		assertThat(available).isTrue();
+	}
+
+	@Test
+	public void testCheckAvailabilityWithMaximumCapacity_returnsFalse() {
+		LocalDate startDate = LocalDate.now();
+		LocalDate endDate = startDate.plusDays(1);
+		when(reservationRepository.findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY);
+
+		boolean available = reservationService.checkAvailability(startDate, endDate);
+		
+		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE);
+		assertThat(available).isFalse();
+	}
+
+	@Test
+	public void testCheckAvailabilityWithInvalidRange_throwsInvalidRangeException() {
+		LocalDate startDate = LocalDate.now();
+		LocalDate endDate = startDate.minusDays(1);
+
+		try {
+			reservationService.checkAvailability(startDate, endDate);
+			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
+		} catch (InvalidRangeException e) {
+			verify(reservationRepository, never()).findQuantityByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class));
+			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+			assertThat(e.getMessage()).contains(startDate.toString(), endDate.toString());
+		}
 	}
 
 	@Test
@@ -127,7 +168,7 @@ public class ReservationServiceImplTest {
 	@Test
 	public void testGetByBookingIdentifierUuidInvalid_throwsReservationNotFoundException() {
 		Reservation reservation = basicReservation();
-		when(reservationRepository.findByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenThrow(new ReservationNotFoundException(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE));
+		when(reservationRepository.findByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenReturn(Optional.empty());
 
 		try {
 			reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);

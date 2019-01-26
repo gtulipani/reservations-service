@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
@@ -35,7 +36,7 @@ public class ReservationCancellationValidatorExtensionImpl extends ReservationCo
 														 @Value("${reservations.max-advance-days}") int maxAdvanceTime,
 														 @Value("${reservations.min-duration}") int minDuration,
 														 @Value("${reservations.max-duration}") int maxDuration,
-														 @Autowired ReservationService reservationService,
+														 @Lazy ReservationService reservationService,
 														 @Autowired MessageSource messages) {
 		super(minimumArrivalAheadDays, maxAdvanceTime, minDuration, maxDuration, reservationService, messages);
 		this.checkinTime = LocalTime.of(checkInTimeHour, checkInTimeMinute);

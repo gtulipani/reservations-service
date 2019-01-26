@@ -1,7 +1,9 @@
 package com.reservations.entity;
 
+import static com.reservations.entity.utils.DateUtils.toDate;
+import static com.reservations.entity.utils.DateUtils.toLocalDate;
+
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Date;
 
 import javax.persistence.AttributeConverter;
@@ -11,15 +13,11 @@ import javax.persistence.Converter;
 public class LocalDateAttributeConverter implements AttributeConverter<LocalDate, Date> {
 	@Override
 	public Date convertToDatabaseColumn(LocalDate localDate) {
-		return localDate == null ? null : Date.from(localDate.atStartOfDay()
-				.atZone(ZoneId.systemDefault())
-				.toInstant());
+		return toDate(localDate);
 	}
 
 	@Override
 	public LocalDate convertToEntityAttribute(Date date) {
-		return date == null ? null : date.toInstant()
-				.atZone(ZoneId.systemDefault())
-				.toLocalDate();
+		return toLocalDate(date);
 	}
 }
