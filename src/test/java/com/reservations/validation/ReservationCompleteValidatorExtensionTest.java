@@ -6,7 +6,6 @@ import static com.reservations.TestUtils.basicReservation;
 import static com.reservations.validation.ReservationValidatorConstants.ARRIVAL_DATE_FIELD;
 import static com.reservations.validation.ReservationValidatorConstants.DEPARTURE_DATE_FIELD;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -24,13 +23,17 @@ import org.testng.annotations.Test;
 import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
 
-public class ReservationValidatorTest {
+/**
+ * Altough {@link ReservationCompleteValidatorExtension} is an abstract class, it has some methods implemented.
+ * Therefore, we are instantiating one of the implementations and verifying only these methods.
+ */
+public class ReservationCompleteValidatorExtensionTest {
 	private static final int MIN_ARRIVAL_AHEAD_DAYS = 1;
 	private static final int MAX_ADVANCE_DAYS = 30;
 	private static final int MIN_DURATION = 1;
 	private static final int MAX_DURATION = 3;
 
-	private ReservationValidator reservationValidator;
+	private ReservationCompleteValidatorExtension reservationCompleteValidatorExtension;
 
 	@Mock
 	private MessageSource messages;
@@ -41,19 +44,12 @@ public class ReservationValidatorTest {
 
 		when(messages.getMessage(any(), any(), any())).thenReturn(DEFAULT_ERROR_MESSAGE);
 
-		reservationValidator = new ReservationValidator(
+		reservationCompleteValidatorExtension = new ReservationCreationValidatorExtensionImpl(
 				MIN_ARRIVAL_AHEAD_DAYS,
 				MAX_ADVANCE_DAYS,
 				MIN_DURATION,
 				MAX_DURATION,
 				messages);
-	}
-
-	@Test
-	public void testValidReservation_noErrors() {
-		Reservation reservation = basicReservation();
-
-		assertThatCode(() -> reservationValidator.validate(reservation)).doesNotThrowAnyException();
 	}
 
 	@Test
@@ -63,7 +59,7 @@ public class ReservationValidatorTest {
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
 
 		try {
-			reservationValidator.validate(reservation);
+			reservationCompleteValidatorExtension.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsOnly(basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
@@ -77,7 +73,7 @@ public class ReservationValidatorTest {
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
 
 		try {
-			reservationValidator.validate(reservation);
+			reservationCompleteValidatorExtension.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsOnly(basicError(Collections.singletonList(ARRIVAL_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
@@ -91,7 +87,7 @@ public class ReservationValidatorTest {
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
 
 		try {
-			reservationValidator.validate(reservation);
+			reservationCompleteValidatorExtension.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsOnly(basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
@@ -105,7 +101,7 @@ public class ReservationValidatorTest {
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
 
 		try {
-			reservationValidator.validate(reservation);
+			reservationCompleteValidatorExtension.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsOnly(basicError(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD), DEFAULT_ERROR_MESSAGE));
@@ -119,7 +115,7 @@ public class ReservationValidatorTest {
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
 
 		try {
-			reservationValidator.validate(reservation);
+			reservationCompleteValidatorExtension.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsExactlyInAnyOrder(
@@ -135,7 +131,7 @@ public class ReservationValidatorTest {
 		Reservation reservation = basicReservation(arrivalDate, departureDate);
 
 		try {
-			reservationValidator.validate(reservation);
+			reservationCompleteValidatorExtension.validate(reservation);
 			failBecauseExceptionWasNotThrown(ReservationValidationException.class);
 		} catch (ReservationValidationException e) {
 			assertThat(e.getErrors()).containsExactlyInAnyOrder(

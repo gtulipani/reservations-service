@@ -19,18 +19,17 @@ import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
 import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
 
+/**
+ * Intermediary class that has the logic to validate all the business rules applicable to Reservations
+ */
 @Slf4j
-@Component
-public class ReservationValidator implements Validator<Reservation> {
+public abstract class ReservationCompleteValidatorExtension implements ReservationValidatorExtension {
 	private final int minimumArrivalAheadDays;
 	private final int maxAdvanceTime;
 	private final int minDuration;
@@ -40,11 +39,11 @@ public class ReservationValidator implements Validator<Reservation> {
 
 	private Set<ReservationValidatorError> errors;
 
-	public ReservationValidator(@Value("${reservations.min-arrival-ahead-days}") int minimumArrivalAheadDays,
-								@Value("${reservations.max-advance-days}") int maxAdvanceTime,
-								@Value("${reservations.min-duration}") int minDuration,
-								@Value("${reservations.max-duration}") int maxDuration,
-								@Autowired MessageSource messages) {
+	public ReservationCompleteValidatorExtension(int minimumArrivalAheadDays,
+												 int maxAdvanceTime,
+												 int minDuration, 
+												 int maxDuration, 
+												 MessageSource messages) {
 		this.minimumArrivalAheadDays = minimumArrivalAheadDays;
 		this.maxAdvanceTime = maxAdvanceTime;
 		this.minDuration = minDuration;
@@ -67,11 +66,11 @@ public class ReservationValidator implements Validator<Reservation> {
 				.orElse(Boolean.TRUE)) {
 			throw new ReservationValidationException(errors);
 		}
-		log.info("Successfully validated reservation");
+		log.info("Successfully validated reservation creation");
 	}
 
 	/**
-	 * Predicate that checks that the reservation can be created minimum {@link ReservationValidator#minimumArrivalAheadDays}
+	 * Predicate that checks that the reservation can be created minimum {@link ReservationCreationValidatorExtensionImpl#minimumArrivalAheadDays}
 	 * days ahead from arrival. E.g. a reservation can be created minimum 1 day ahead from arrivalDate.
 	 */
 	private Predicate<Reservation> validateArrivalDateHasMinimumAheadDays() {
@@ -83,7 +82,7 @@ public class ReservationValidator implements Validator<Reservation> {
 	}
 
 	/**
-	 * Predicate that checks that the reservation can be created up to {@link ReservationValidator#maxAdvanceTime}
+	 * Predicate that checks that the reservation can be created up to {@link ReservationCreationValidatorExtensionImpl#maxAdvanceTime}
 	 * days in advance. E.g. a reservation can be created up to 30 days (1 month) in advance.
 	 */
 	private Predicate<Reservation> validateArrivalDateDoesntExceedMaximumAdvanceDays() {
@@ -95,7 +94,7 @@ public class ReservationValidator implements Validator<Reservation> {
 	}
 
 	/**
-	 * Predicate that checks that the reservation has a minimum duration of {@link ReservationValidator#minDuration}
+	 * Predicate that checks that the reservation has a minimum duration of {@link ReservationCreationValidatorExtensionImpl#minDuration}
 	 * days. E.g. a reservation must have a minimum duration of 1 day.
 	 */
 	private Predicate<Reservation> validateMinimumDuration() {
@@ -107,7 +106,7 @@ public class ReservationValidator implements Validator<Reservation> {
 	}
 
 	/**
-	 * Predicate that checks that the reservation doesnt exceed the maximum duration of {@link ReservationValidator#maxDuration}
+	 * Predicate that checks that the reservation doesnt exceed the maximum duration of {@link ReservationCreationValidatorExtensionImpl#maxDuration}
 	 * days. E.g. a reservation can't exceed 3 days.
 	 */
 	private Predicate<Reservation> validateMaximumDuration() {
@@ -120,7 +119,7 @@ public class ReservationValidator implements Validator<Reservation> {
 
 	/**
 	 * Internal method that validates a negative predicate received as parameter.
-	 * If the {@link Predicate} received as parameter is false, the error is added to the {@link ReservationValidator#errors} attribute.
+	 * If the {@link Predicate} received as parameter is false, the error is added to the {@link ReservationCreationValidatorExtensionImpl#errors} attribute.
 	 */
 	private Predicate<Reservation> checkPredicate(Predicate<Reservation> predicate, ReservationValidatorError error) {
 		return reservation -> {
@@ -135,7 +134,7 @@ public class ReservationValidator implements Validator<Reservation> {
 	/**
 	 * Private method that gets a message from the resource bundle using the specificErrorKey received as parameter
 	 */
-	private String getMessage(String specificErrorKey) {
+	String getMessage(String specificErrorKey) {
 		return messages.getMessage(String.format(VALIDATION_ERROR_BASE, specificErrorKey), null, Locale.getDefault());
 	}
 }

@@ -21,25 +21,22 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.Sets;
 import com.reservations.entity.Reservation;
+import com.reservations.entity.ReservationStatus;
 import com.reservations.exception.ReservationNotFoundException;
 import com.reservations.exception.ReservationValidationException;
 import com.reservations.service.ReservationService;
-import com.reservations.validation.Validator;
 
 public class ReservationControllerImplTest {
 	@Mock
 	private ReservationService reservationService;
 
-	@Mock
-	private Validator<Reservation> reservationValidator;
-
 	private ReservationControllerImpl reservationControllerImpl;
 
 	@BeforeMethod
-	public void setUp() {
+	public void setup() {
 		initMocks(this);
 
-		reservationControllerImpl = new ReservationControllerImpl(reservationService, reservationValidator);
+		reservationControllerImpl = new ReservationControllerImpl(reservationService);
 	}
 
 	@Test
@@ -49,7 +46,6 @@ public class ReservationControllerImplTest {
 
 		ResponseEntity responseEntity = reservationControllerImpl.createReservation(reservation).call();
 
-		verify(reservationValidator, times(1)).validate(reservation);
 		verify(reservationService, times(1)).createReservation(reservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(responseEntity.getBody()).isEqualTo(reservation);
@@ -58,27 +54,13 @@ public class ReservationControllerImplTest {
 	@Test
 	public void testCreateReservation_returnsBadRequestWhenReservationValidationExceptionIsThrown() throws Exception {
 		Reservation reservation = basicReservation();
-		doThrow(new ReservationValidationException(Sets.newHashSet(basicError()))).when(reservationValidator).validate(reservation);
+		when(reservationService.createReservation(reservation)).thenThrow(new ReservationValidationException(Sets.newHashSet(basicError())));
 
 		ResponseEntity responseEntity = reservationControllerImpl.createReservation(reservation).call();
 
-		verify(reservationValidator, times(1)).validate(reservation);
-		verify(reservationService, never()).createReservation(any());
+		verify(reservationService, times(1)).createReservation(reservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 		assertThat(responseEntity.getBody()).isEqualTo(Sets.newHashSet(basicError()));
-	}
-
-	@Test
-	public void testCreateReservation_returnsInternalServerErrorWhenExceptionIsThrownInValidator() throws Exception {
-		Reservation reservation = basicReservation();
-		doThrow(new NullPointerException(DEFAULT_ERROR_MESSAGE)).when(reservationValidator).validate(reservation);
-
-		ResponseEntity responseEntity = reservationControllerImpl.createReservation(reservation).call();
-
-		verify(reservationValidator, times(1)).validate(reservation);
-		verify(reservationService, never()).createReservation(any());
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);
 	}
 
 	@Test
@@ -88,7 +70,6 @@ public class ReservationControllerImplTest {
 
 		ResponseEntity responseEntity = reservationControllerImpl.createReservation(reservation).call();
 
-		verify(reservationValidator, times(1)).validate(reservation);
 		verify(reservationService, times(1)).createReservation(reservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);
@@ -98,12 +79,12 @@ public class ReservationControllerImplTest {
 	public void testUpdateReservation_noErrors() throws Exception {
 		Reservation reservation = basicReservation();
 		Reservation newReservation = differentReservation(reservation);
-		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenReturn(reservation);
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenReturn(reservation);
 		when(reservationService.updateReservation(reservation, newReservation)).thenReturn(newReservation);
 
 		ResponseEntity responseEntity = reservationControllerImpl.updateReservation(reservation.getBookingIdentifierUuid(), newReservation).call();
 
-		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
 		verify(reservationService, times(1)).updateReservation(reservation, newReservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(responseEntity.getBody()).isEqualTo(newReservation);
@@ -113,12 +94,12 @@ public class ReservationControllerImplTest {
 	public void testUpdateReservation_returnsCorrespondingResponseStatusAndResponseBodyWhenReservationNotFoundExceptionIsThrown() throws Exception {
 		Reservation reservation = basicReservation();
 		Reservation newReservation = differentReservation(reservation);
-		ReservationNotFoundException exception = new ReservationNotFoundException(reservation.getBookingIdentifierUuid());
-		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenThrow(exception);
+		ReservationNotFoundException exception = new ReservationNotFoundException(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenThrow(exception);
 
 		ResponseEntity responseEntity = reservationControllerImpl.updateReservation(reservation.getBookingIdentifierUuid(), newReservation).call();
 
-		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
 		verify(reservationService, never()).updateReservation(any(Reservation.class), any(Reservation.class));
 		assertThat(responseEntity.getStatusCode()).isEqualTo(exception.getResponseStatus());
 		assertThat(responseEntity.getBody()).isEqualTo(exception.getResponseBody());
@@ -128,12 +109,12 @@ public class ReservationControllerImplTest {
 	public void testUpdateReservation_returnsBadRequestWhenReservationValidationExceptionIsThrown() throws Exception {
 		Reservation reservation = basicReservation();
 		Reservation newReservation = differentReservation(reservation);
-		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenReturn(reservation);
-		doThrow(new ReservationValidationException(Sets.newHashSet(basicError()))).when(reservationService).updateReservation(reservation, newReservation);
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenReturn(reservation);
+		when(reservationService.updateReservation(reservation, newReservation)).thenThrow(new ReservationValidationException(Sets.newHashSet(basicError())));
 
 		ResponseEntity responseEntity = reservationControllerImpl.updateReservation(reservation.getBookingIdentifierUuid(), newReservation).call();
 
-		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
 		verify(reservationService, times(1)).updateReservation(reservation, newReservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 		assertThat(responseEntity.getBody()).isEqualTo(Sets.newHashSet(basicError()));
@@ -143,12 +124,12 @@ public class ReservationControllerImplTest {
 	public void testUpdateReservation_returnsInternalServerErrorWhenExceptionIsThrownInService() throws Exception {
 		Reservation reservation = basicReservation();
 		Reservation newReservation = differentReservation(reservation);
-		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenReturn(reservation);
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenReturn(reservation);
 		when(reservationService.updateReservation(reservation, newReservation)).thenThrow(new NullPointerException(DEFAULT_ERROR_MESSAGE));
 
 		ResponseEntity responseEntity = reservationControllerImpl.updateReservation(reservation.getBookingIdentifierUuid(), newReservation).call();
 
-		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
 		verify(reservationService, times(1)).updateReservation(reservation, newReservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);
@@ -157,11 +138,11 @@ public class ReservationControllerImplTest {
 	@Test
 	public void testCancelReservation_noErrors() throws Exception {
 		Reservation reservation = basicReservation();
-		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenReturn(reservation);
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenReturn(reservation);
 
 		ResponseEntity responseEntity = reservationControllerImpl.cancelReservation(reservation.getBookingIdentifierUuid()).call();
 
-		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
 		verify(reservationService, times(1)).cancelReservation(reservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 		assertThat(responseEntity.getBody()).isNull();
@@ -170,26 +151,40 @@ public class ReservationControllerImplTest {
 	@Test
 	public void testCancelReservation_returnsCorrespondingResponseStatusAndResponseBodyWhenReservationNotFoundExceptionIsThrown() throws Exception {
 		Reservation reservation = basicReservation();
-		ReservationNotFoundException exception = new ReservationNotFoundException(reservation.getBookingIdentifierUuid());
-		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenThrow(exception);
+		ReservationNotFoundException exception = new ReservationNotFoundException(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenThrow(exception);
 
 		ResponseEntity responseEntity = reservationControllerImpl.cancelReservation(reservation.getBookingIdentifierUuid()).call();
 
-		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
 		verify(reservationService, never()).cancelReservation(any(Reservation.class));
 		assertThat(responseEntity.getStatusCode()).isEqualTo(exception.getResponseStatus());
 		assertThat(responseEntity.getBody()).isEqualTo(exception.getResponseBody());
 	}
 
 	@Test
+	public void testCancelReservation_returnsBadRequestWhenReservationValidationExceptionIsThrown() throws Exception {
+		Reservation reservation = basicReservation();
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenReturn(reservation);
+		doThrow(new ReservationValidationException(Sets.newHashSet(basicError()))).when(reservationService).cancelReservation(reservation);
+
+		ResponseEntity responseEntity = reservationControllerImpl.cancelReservation(reservation.getBookingIdentifierUuid()).call();
+
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
+		verify(reservationService, times(1)).cancelReservation(reservation);
+		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(responseEntity.getBody()).isEqualTo(Sets.newHashSet(basicError()));
+	}
+
+	@Test
 	public void testCancelReservation_returnsInternalServerErrorWhenExceptionIsThrownInService() throws Exception {
 		Reservation reservation = basicReservation();
-		when(reservationService.getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid())).thenReturn(reservation);
+		when(reservationService.getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE)).thenReturn(reservation);
 		doThrow(new NullPointerException(DEFAULT_ERROR_MESSAGE)).when(reservationService).cancelReservation(reservation);
 
 		ResponseEntity responseEntity = reservationControllerImpl.cancelReservation(reservation.getBookingIdentifierUuid()).call();
 
-		verify(reservationService, times(1)).getByBookingIdentifierUuid(reservation.getBookingIdentifierUuid());
+		verify(reservationService, times(1)).getByBookingIdentifierUuidAndStatus(reservation.getBookingIdentifierUuid(), ReservationStatus.ACTIVE);
 		verify(reservationService, times(1)).cancelReservation(reservation);
 		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);

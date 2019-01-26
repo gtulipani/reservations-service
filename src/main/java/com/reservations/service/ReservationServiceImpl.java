@@ -1,32 +1,36 @@
 package com.reservations.service;
 
 import java.util.Objects;
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationStatus;
 import com.reservations.exception.ReservationNotFoundException;
+import com.reservations.extensibility.utils.ExtensionUtils;
 import com.reservations.repository.ReservationRepository;
-import com.reservations.validation.Validator;
+import com.reservations.validation.ReservationValidatorExtension;
 
 @Slf4j
 @Service
 public class ReservationServiceImpl implements ReservationService {
 	private final ReservationRepository reservationRepository;
-	private final Validator<Reservation> reservationValidator;
+	private final Set<ReservationValidatorExtension> reservationValidatorExtensions;
 
 	@Autowired
-	public ReservationServiceImpl(ReservationRepository reservationRepository, Validator<Reservation> reservationValidator) {
+	public ReservationServiceImpl(ReservationRepository reservationRepository, Set<ReservationValidatorExtension> reservationValidatorExtensions) {
 		this.reservationRepository = reservationRepository;
-		this.reservationValidator = reservationValidator;
+		this.reservationValidatorExtensions = reservationValidatorExtensions;
 	}
 
 	@Override
 	public Reservation createReservation(Reservation reservation) {
+		ExtensionUtils.get(reservationValidatorExtensions, EventType.CREATION).validate(reservation);
 		reservation.setStatus(ReservationStatus.ACTIVE);
 		reservationRepository.save(reservation);
 		log.info("Successfully created reservation={}", reservation);
@@ -34,14 +38,15 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
-	public Reservation getByBookingIdentifierUuid(String bookingIdentifierUuid){
-		return reservationRepository.findByBookingIdentifierUuid(bookingIdentifierUuid)
-				.orElseThrow(() -> new ReservationNotFoundException(bookingIdentifierUuid));
+	public Reservation getByBookingIdentifierUuidAndStatus(String bookingIdentifierUuid, ReservationStatus reservationStatus){
+		return reservationRepository.findByBookingIdentifierUuidAndStatus(bookingIdentifierUuid, reservationStatus)
+				.orElseThrow(() -> new ReservationNotFoundException(bookingIdentifierUuid, reservationStatus));
 	}
 
 	@Override
 	public Reservation updateReservation(Reservation oldReservation, Reservation newReservation) {
 		Reservation updatedReservation = patchReservation(oldReservation, newReservation);
+		ExtensionUtils.get(reservationValidatorExtensions, EventType.UPDATE).validate(updatedReservation);
 		reservationRepository.save(updatedReservation);
 		log.info("Successfully updated reservation={}", updatedReservation);
 		return updatedReservation;
@@ -49,7 +54,10 @@ public class ReservationServiceImpl implements ReservationService {
 
 	@Override
 	public void cancelReservation(Reservation reservation) {
-		
+		ExtensionUtils.get(reservationValidatorExtensions, EventType.CANCELLATION).validate(reservation);
+		reservation.setStatus(ReservationStatus.CANCELLED);
+		reservationRepository.save(reservation);
+		log.info("Successfully cancelled reservation={}", reservation);
 	}
 
 	private Reservation patchReservation(Reservation oldReservation, Reservation newReservation) {
@@ -59,7 +67,6 @@ public class ReservationServiceImpl implements ReservationService {
 		if (Objects.nonNull(newReservation.getDepartureDate())) {
 			oldReservation.setDepartureDate(newReservation.getDepartureDate());
 		}
-		reservationValidator.validate(oldReservation);
 		return oldReservation;
 	}
 }

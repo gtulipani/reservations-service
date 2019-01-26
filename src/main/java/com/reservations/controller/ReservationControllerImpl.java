@@ -1,9 +1,8 @@
 package com.reservations.controller;
 
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reservations.entity.Reservation;
+import com.reservations.entity.ReservationStatus;
 import com.reservations.exception.ReservationServiceException;
 import com.reservations.exception.ReservationValidationException;
 import com.reservations.service.ReservationService;
-import com.reservations.validation.Validator;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,7 +27,6 @@ import com.reservations.validation.Validator;
 @RequestMapping(value = "/api/v1/reservations", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 public class ReservationControllerImpl implements ReservationController {
 	private final ReservationService reservationService;
-	private final Validator<Reservation> reservationValidator;
 
 	@Override
 	@RequestMapping(method = RequestMethod.POST)
@@ -36,7 +34,6 @@ public class ReservationControllerImpl implements ReservationController {
 		return () -> {
 			log.info("Received API to create a reservation for user with fullName={}", reservation.getFullName());
 			try {
-				reservationValidator.validate(reservation);
 				return ResponseEntity.ok(reservationService.createReservation(reservation));
 			} catch (ReservationValidationException e) {
 				log.error("Error validating reservation={}, error={}", reservation, e.getMessage());
@@ -54,12 +51,12 @@ public class ReservationControllerImpl implements ReservationController {
 		return () -> {
 			log.info("Received API to update reservation with bookingIdentifierUuid={}", bookingIdentifierUuid);
 			try {
-				return ResponseEntity.ok(reservationService.updateReservation(reservationService.getByBookingIdentifierUuid(bookingIdentifierUuid), updatedReservation));
+				return ResponseEntity.ok(reservationService.updateReservation(reservationService.getByBookingIdentifierUuidAndStatus(bookingIdentifierUuid, ReservationStatus.ACTIVE), updatedReservation));
 			} catch (ReservationServiceException e) {
 				log.error("Error updating reservation={}, error={}", updatedReservation, e.getMessage());
 				return ResponseEntity.status(e.getResponseStatus()).body(e.getResponseBody());
 			} catch (ReservationValidationException e) {
-				log.error("Error validating reservation={}, error={}", updatedReservation, e.getMessage());
+				log.error("Error validating update of reservation={}, error={}", updatedReservation, e.getMessage());
 				return ResponseEntity.badRequest().body(e.getErrors());
 			} catch (Exception e) {
 				log.error("Error updating reservation={}, error={}", updatedReservation, e.getMessage());
@@ -74,11 +71,14 @@ public class ReservationControllerImpl implements ReservationController {
 		return () -> {
 			log.info("Received API to cancel reservation with bookingIdentifierUuid={}", bookingIdentifierUuid);
 			try {
-				reservationService.cancelReservation(reservationService.getByBookingIdentifierUuid(bookingIdentifierUuid));
+				reservationService.cancelReservation(reservationService.getByBookingIdentifierUuidAndStatus(bookingIdentifierUuid, ReservationStatus.ACTIVE));
 				return ResponseEntity.noContent().build();
 			} catch (ReservationServiceException e) {
 				log.error("Error cancelling reservation with bookingIdentifierUuid={}, error={}", bookingIdentifierUuid, e.getMessage());
 				return ResponseEntity.status(e.getResponseStatus()).body(e.getResponseBody());
+			} catch (ReservationValidationException e) {
+				log.error("Error validating cancellation of reservation with bookingIdentifierUuid={}, error={}", bookingIdentifierUuid, e.getMessage());
+				return ResponseEntity.badRequest().body(e.getErrors());
 			} catch (Exception e) {
 				log.error("Error cancelling reservation with bookingIdentifierUuid={}, error={}", bookingIdentifierUuid, e.getMessage());
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
