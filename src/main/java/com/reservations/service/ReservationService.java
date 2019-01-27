@@ -10,7 +10,7 @@ import com.reservations.entity.ReservationStatus;
 public interface ReservationService {
 	Set<ReservationAvailability> getAvailability(DateRange dateRange);
 
-	boolean checkAvailability(DateRange dateRange);
+	boolean checkAvailability(DateRange dateRange, String bookingIdentifierUuid);
 
 	Reservation createReservation(Reservation reservation);
 

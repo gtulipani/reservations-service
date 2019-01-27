@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,9 +61,9 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
-	public boolean checkAvailability(DateRange dateRange) {
+	public boolean checkAvailability(DateRange dateRange, String bookingIdentifierUuid) {
 		checkValidRange(dateRange);
-		return reservationRepository.findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE) < maxCapacity;
+		return reservationRepository.findQuantityByDateRangeAndStatusOmittingBookingIdentifierUuid(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE, bookingIdentifierUuid) < maxCapacity;
 	}
 
 	@Override

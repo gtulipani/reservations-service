@@ -129,10 +129,12 @@ public abstract class ReservationCompleteValidatorExtension implements Reservati
 	 * and finishing in {@link Reservation#departureDate}.
 	 */
 	private Predicate<Reservation> validateCampsiteAvailability() {
-		return checkPredicate(reservation -> !reservationService.checkAvailability(DateRange.builder()
-						.start(reservation.getArrivalDate())
-						.end(reservation.getDepartureDate())
-						.build()),
+		return checkPredicate(reservation -> !reservationService.checkAvailability(
+						DateRange.builder()
+								.start(reservation.getArrivalDate())
+								.end(reservation.getDepartureDate())
+								.build(),
+						reservation.getBookingIdentifierUuid()),
 				ReservationValidatorError.builder()
 						.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
 						.description(getMessage(VALIDATION_ERROR_MAXIMUM_CAPACITY))

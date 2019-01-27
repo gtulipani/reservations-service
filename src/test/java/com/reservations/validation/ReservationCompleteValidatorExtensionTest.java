@@ -64,7 +64,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).minusDays(1).plusDays(MIN_DURATION))
 				.build();
 		Reservation reservation = basicReservation(dateRange);
-		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
+		when(reservationService.checkAvailability(dateRange, reservation.getBookingIdentifierUuid())).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -81,7 +81,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				.end(LocalDate.now().plusDays(MAX_ADVANCE_DAYS).plusDays(1).plusDays(MIN_DURATION))
 				.build();
 		Reservation reservation = basicReservation(dateRange);
-		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
+		when(reservationService.checkAvailability(dateRange, reservation.getBookingIdentifierUuid())).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -98,7 +98,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).plusDays(MIN_DURATION).minusDays(1))
 				.build();
 		Reservation reservation = basicReservation(dateRange);
-		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
+		when(reservationService.checkAvailability(dateRange, reservation.getBookingIdentifierUuid())).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -115,7 +115,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).plusDays(MAX_DURATION).plusDays(1))
 				.build();
 		Reservation reservation = basicReservation(dateRange);
-		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
+		when(reservationService.checkAvailability(dateRange, reservation.getBookingIdentifierUuid())).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -132,7 +132,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).minusDays(1).plusDays(MIN_DURATION).minusDays(1))
 				.build();
 		Reservation reservation = basicReservation(dateRange);
-		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
+		when(reservationService.checkAvailability(dateRange, reservation.getBookingIdentifierUuid())).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -151,7 +151,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				.end(LocalDate.now().plusDays(MAX_ADVANCE_DAYS).plusDays(1).plusDays(MAX_DURATION).plusDays(1))
 				.build();
 		Reservation reservation = basicReservation(dateRange);
-		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
+		when(reservationService.checkAvailability(dateRange, reservation.getBookingIdentifierUuid())).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -170,7 +170,7 @@ public class ReservationCompleteValidatorExtensionTest {
 				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).plusDays(MIN_DURATION))
 				.build();
 		Reservation reservation = basicReservation(dateRange);
-		when(reservationService.checkAvailability(dateRange)).thenReturn(false);
+		when(reservationService.checkAvailability(dateRange, reservation.getBookingIdentifierUuid())).thenReturn(false);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);

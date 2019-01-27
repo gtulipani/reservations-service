@@ -21,7 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -82,44 +84,47 @@ public class ReservationServiceImplTest {
 
 	@Test
 	public void testCheckAvailability_returnsTrue() {
+		String bookingIdentifierUuid = UUID.randomUUID().toString();
 		DateRange dateRange = DateRange.builder()
 				.start(LocalDate.now())
 				.end(LocalDate.now().plusDays(1))
 				.build();
-		when(reservationRepository.findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY - 1);
+		when(reservationRepository.findQuantityByDateRangeAndStatusOmittingBookingIdentifierUuid(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE, bookingIdentifierUuid)).thenReturn(MAX_CAPACITY - 1);
 
-		boolean available = reservationService.checkAvailability(dateRange);
+		boolean available = reservationService.checkAvailability(dateRange, bookingIdentifierUuid);
 
-		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE);
+		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatusOmittingBookingIdentifierUuid(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE, bookingIdentifierUuid);
 		assertThat(available).isTrue();
 	}
 
 	@Test
 	public void testCheckAvailabilityWithMaximumCapacity_returnsFalse() {
+		String bookingIdentifierUuid = UUID.randomUUID().toString();
 		DateRange dateRange = DateRange.builder()
 				.start(LocalDate.now())
 				.end(LocalDate.now().plusDays(1))
 				.build();
-		when(reservationRepository.findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY);
+		when(reservationRepository.findQuantityByDateRangeAndStatusOmittingBookingIdentifierUuid(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE, bookingIdentifierUuid)).thenReturn(MAX_CAPACITY);
 
-		boolean available = reservationService.checkAvailability(dateRange);
+		boolean available = reservationService.checkAvailability(dateRange, bookingIdentifierUuid);
 		
-		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE);
+		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatusOmittingBookingIdentifierUuid(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE, bookingIdentifierUuid);
 		assertThat(available).isFalse();
 	}
 
 	@Test
 	public void testCheckAvailabilityWithInvalidRange_throwsInvalidRangeException() {
+		String bookingIdentifierUuid = UUID.randomUUID().toString();
 		DateRange dateRange = DateRange.builder()
 				.start(LocalDate.now())
 				.end(LocalDate.now().minusDays(1))
 				.build();
 
 		try {
-			reservationService.checkAvailability(dateRange);
+			reservationService.checkAvailability(dateRange, bookingIdentifierUuid);
 			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
 		} catch (InvalidRangeException e) {
-			verify(reservationRepository, never()).findQuantityByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class));
+			verify(reservationRepository, never()).findQuantityByDateRangeAndStatusOmittingBookingIdentifierUuid(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class), any(String.class));
 			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
 			assertThat(e.getMessage()).contains(dateRange.getStart().toString(), dateRange.getEnd().toString());
 		}
