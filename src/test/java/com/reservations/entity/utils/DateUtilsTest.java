@@ -3,8 +3,10 @@ package com.reservations.entity.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
 import java.util.Date;
 
 import org.testng.annotations.Test;
@@ -13,10 +15,28 @@ import com.reservations.entity.DateRange;
 
 public class DateUtilsTest {
 	@Test
+	public void testToLocalDate() {
+		Date date = new Date();
+
+		assertThat(DateUtils.toLocalDate(date)).isToday();
+	}
+
+	@Test
 	public void testToLocalDate_fromNull() {
 		Date date = null;
 
 		assertThat(DateUtils.toLocalDate(date)).isNull();
+	}
+
+	@Test
+	public void testToDate() {
+		LocalDate localDate = LocalDate.now();
+
+		Date date = DateUtils.toDate(localDate);
+
+		assertThat(date).hasYear(localDate.getYear());
+		assertThat(date).hasMonth(localDate.getMonthValue());
+		assertThat(date).hasDayOfMonth(localDate.getDayOfMonth());
 	}
 
 	@Test
@@ -27,10 +47,34 @@ public class DateUtilsTest {
 	}
 
 	@Test
+	public void testToLocalDateTime() {
+		Timestamp timestamp = Timestamp.from(Instant.now());
+
+		LocalDateTime localDateTime = DateUtils.toLocalDateTime(timestamp);
+
+		assertThat(localDateTime).isEqualTo(timestamp.toLocalDateTime());
+	}
+
+	@Test
 	public void testToLocalDateTime_fromNull() {
 		Timestamp timestamp = null;
 
 		assertThat(DateUtils.toLocalDateTime(timestamp)).isNull();
+	}
+
+	@Test
+	public void testToTimestamp() {
+		LocalDateTime localDateTime = LocalDateTime.now();
+
+		Timestamp timestamp = DateUtils.toTimestamp(localDateTime);
+
+		assertThat(timestamp).hasYear(localDateTime.getYear());
+		assertThat(timestamp).hasMonth(localDateTime.getMonthValue());
+		assertThat(timestamp).hasDayOfMonth(localDateTime.getDayOfMonth());
+		assertThat(timestamp).hasHourOfDay(localDateTime.getHour());
+		assertThat(timestamp).hasMinute(localDateTime.getMinute());
+		assertThat(timestamp).hasSecond(localDateTime.getSecond());
+		assertThat(timestamp).hasMillisecond(localDateTime.get(ChronoField.MILLI_OF_SECOND));
 	}
 
 	@Test
