@@ -1,16 +1,16 @@
 package com.reservations.service;
 
-import java.time.LocalDate;
 import java.util.Set;
 
+import com.reservations.entity.DateRange;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationAvailability;
 import com.reservations.entity.ReservationStatus;
 
 public interface ReservationService {
-	Set<ReservationAvailability> getAvailability(LocalDate start, LocalDate end);
+	Set<ReservationAvailability> getAvailability(DateRange dateRange);
 
-	boolean checkAvailability(LocalDate start, LocalDate end);
+	boolean checkAvailability(DateRange dateRange);
 
 	Reservation createReservation(Reservation reservation);
 

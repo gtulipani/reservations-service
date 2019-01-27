@@ -8,8 +8,11 @@ import java.util.UUID;
 
 import org.apache.commons.lang.RandomStringUtils;
 
+import com.google.common.collect.Lists;
+import com.reservations.entity.DateRange;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationStatus;
+import com.reservations.entity.utils.DateUtils;
 import com.reservations.validation.ReservationValidatorError;
 
 public class TestUtils {
@@ -40,6 +43,20 @@ public class TestUtils {
 				.departureDate(departureDate)
 				.bookingIdentifierUuid(UUID.randomUUID().toString())
 				.build();
+	}
+
+	public static Reservation basicReservation(DateRange dateRange) {
+		return basicReservation(dateRange.getStart(), dateRange.getEnd());
+	}
+
+	/**
+	 * Creates a {@link Reservation}, one reservation per day, using the same duration for all of them. The days within
+	 * the range are calculated using {@link DateUtils#daysBetween(DateRange)}
+	 */
+	public static List<Reservation> basicReservationsWithinRange(DateRange dateRange) {
+		List<Reservation> reservations = Lists.newArrayList();
+		DateUtils.daysBetween(dateRange).forEach(date -> reservations.add(basicReservation(date, date.plusDays(1))));
+		return reservations;
 	}
 
 	public static ReservationValidatorError basicError(List<String> errors, String description) {

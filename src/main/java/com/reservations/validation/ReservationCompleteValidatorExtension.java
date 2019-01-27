@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 
 import com.google.common.collect.Sets;
+import com.reservations.entity.DateRange;
 import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
 import com.reservations.service.ReservationService;
@@ -128,7 +129,10 @@ public abstract class ReservationCompleteValidatorExtension implements Reservati
 	 * and finishing in {@link Reservation#departureDate}.
 	 */
 	private Predicate<Reservation> validateCampsiteAvailability() {
-		return checkPredicate(reservation -> !reservationService.checkAvailability(reservation.getArrivalDate(), reservation.getDepartureDate()),
+		return checkPredicate(reservation -> !reservationService.checkAvailability(DateRange.builder()
+						.start(reservation.getArrivalDate())
+						.end(reservation.getDepartureDate())
+						.build()),
 				ReservationValidatorError.builder()
 						.fields(Arrays.asList(ARRIVAL_DATE_FIELD, DEPARTURE_DATE_FIELD))
 						.description(getMessage(VALIDATION_ERROR_MAXIMUM_CAPACITY))

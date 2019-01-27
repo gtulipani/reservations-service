@@ -9,6 +9,8 @@ import java.util.Date;
 
 import org.testng.annotations.Test;
 
+import com.reservations.entity.DateRange;
+
 public class DateUtilsTest {
 	@Test
 	public void testToLocalDate_fromNull() {
@@ -59,5 +61,40 @@ public class DateUtilsTest {
 		LocalDate yesterday = today.minusDays(1);
 
 		assertThat(DateUtils.daysBetween(today, yesterday)).isEmpty();
+	}
+
+	@Test
+	public void testDaysBetweenRangeWithTodayAndTomorrow_doesntIncludeTomorrow() {
+		LocalDate today = LocalDate.now();
+		LocalDate tomorrow = today.plusDays(1);
+		DateRange dateRange = DateRange.builder()
+				.start(today)
+				.end(tomorrow)
+				.build();
+
+		assertThat(DateUtils.daysBetween(dateRange)).containsOnlyOnce(today);
+	}
+
+	@Test
+	public void testDaysBetweenRangeWithTodayAndToday_includesToday() {
+		LocalDate today = LocalDate.now();
+		DateRange dateRange = DateRange.builder()
+				.start(today)
+				.end(today)
+				.build();
+
+		assertThat(DateUtils.daysBetween(dateRange)).containsOnlyOnce(today);
+	}
+
+	@Test
+	public void testDaysBetweenRangeWithTodayAndYesterday_isEmpty() {
+		LocalDate today = LocalDate.now();
+		LocalDate yesterday = today.minusDays(1);
+		DateRange dateRange = DateRange.builder()
+				.start(today)
+				.end(yesterday)
+				.build();
+
+		assertThat(DateUtils.daysBetween(dateRange)).isEmpty();
 	}
 }

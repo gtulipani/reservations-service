@@ -2,6 +2,7 @@ package com.reservations.service;
 
 import static com.reservations.TestUtils.basicError;
 import static com.reservations.TestUtils.basicReservation;
+import static com.reservations.TestUtils.basicReservationsWithinRange;
 import static com.reservations.TestUtils.differentReservation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,10 +34,12 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.reservations.entity.DateRange;
 import com.reservations.entity.EventType;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationAvailability;
 import com.reservations.entity.ReservationStatus;
+import com.reservations.entity.utils.DateUtils;
 import com.reservations.exception.InvalidRangeException;
 import com.reservations.exception.ReservationNotFoundException;
 import com.reservations.exception.ReservationValidationException;
@@ -49,6 +52,7 @@ import com.reservations.validation.ReservationUpdateValidatorExtensionImpl;
 
 public class ReservationServiceImplTest {
 	private static final long MAX_CAPACITY = 10L;
+	private static final int PAGE_SIZE = 10;
 
 	@Mock
 	private ReservationRepository reservationRepository;
@@ -78,58 +82,66 @@ public class ReservationServiceImplTest {
 
 	@Test
 	public void testCheckAvailability_returnsTrue() {
-		LocalDate startDate = LocalDate.now();
-		LocalDate endDate = startDate.plusDays(1);
-		when(reservationRepository.findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY - 1);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().plusDays(1))
+				.build();
+		when(reservationRepository.findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY - 1);
 
-		boolean available = reservationService.checkAvailability(startDate, endDate);
+		boolean available = reservationService.checkAvailability(dateRange);
 
-		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE);
+		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE);
 		assertThat(available).isTrue();
 	}
 
 	@Test
 	public void testCheckAvailabilityWithMaximumCapacity_returnsFalse() {
-		LocalDate startDate = LocalDate.now();
-		LocalDate endDate = startDate.plusDays(1);
-		when(reservationRepository.findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().plusDays(1))
+				.build();
+		when(reservationRepository.findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE)).thenReturn(MAX_CAPACITY);
 
-		boolean available = reservationService.checkAvailability(startDate, endDate);
+		boolean available = reservationService.checkAvailability(dateRange);
 		
-		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(startDate, endDate, ReservationStatus.ACTIVE);
+		verify(reservationRepository, times(1)).findQuantityByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE);
 		assertThat(available).isFalse();
 	}
 
 	@Test
 	public void testCheckAvailabilityWithInvalidRange_throwsInvalidRangeException() {
-		LocalDate startDate = LocalDate.now();
-		LocalDate endDate = startDate.minusDays(1);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().minusDays(1))
+				.build();
 
 		try {
-			reservationService.checkAvailability(startDate, endDate);
+			reservationService.checkAvailability(dateRange);
 			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
 		} catch (InvalidRangeException e) {
 			verify(reservationRepository, never()).findQuantityByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class));
 			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-			assertThat(e.getMessage()).contains(startDate.toString(), endDate.toString());
+			assertThat(e.getMessage()).contains(dateRange.getStart().toString(), dateRange.getEnd().toString());
 		}
 	}
 
 	@Test
 	public void testGetAvailabilityForTodayAndTomorrow_fetchesPagesUntilEmptyAndReturnsAvailabilityForToday() {
-		LocalDate startDate = LocalDate.now();
-		LocalDate endDate = startDate.plusDays(1);
-		Reservation firstReservation = basicReservation();
-		Reservation secondReservation = basicReservation();
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().plusDays(1))
+				.build();
+		Reservation firstReservation = basicReservation(dateRange);
+		Reservation secondReservation = basicReservation(dateRange);
 		List<Reservation> reservations = Arrays.asList(firstReservation, secondReservation);
 		// We'll receive a Page<Reservation> only the first time, and then an empty Page
-		when(reservationRepository.findReservationsByDateRangeAndStatus(eq(startDate), eq(endDate), eq(ReservationStatus.ACTIVE), any(Pageable.class)))
+		when(reservationRepository.findReservationsByDateRangeAndStatus(eq(dateRange.getStart()), eq(dateRange.getEnd()), eq(ReservationStatus.ACTIVE), any(Pageable.class)))
 				.thenAnswer(new Answer<Object>() {
 						private int callNumber = 0;
 			
 						@Override
 						public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-							Pageable pageable = new PageRequest(callNumber, 10);
+							Pageable pageable = new PageRequest(callNumber, PAGE_SIZE);
 							if (callNumber == 0) {
 								callNumber++;
 								return new PageImpl<>(reservations, pageable, reservations.size()
@@ -139,27 +151,68 @@ public class ReservationServiceImplTest {
 							}
 						}});
 
-		Set<ReservationAvailability> availabilitySet = reservationService.getAvailability(startDate, endDate);
+		Set<ReservationAvailability> availabilitySet = reservationService.getAvailability(dateRange);
 
-		verify(reservationRepository, times(2)).findReservationsByDateRangeAndStatus(eq(startDate), eq(endDate), eq(ReservationStatus.ACTIVE), any(Pageable.class));
+		verify(reservationRepository, times(2)).findReservationsByDateRangeAndStatus(eq(dateRange.getStart()), eq(dateRange.getEnd()), eq(ReservationStatus.ACTIVE), any(Pageable.class));
 		assertThat(availabilitySet).containsOnlyOnce(ReservationAvailability.builder()
 						.date(firstReservation.getArrivalDate())
-						.availability(2L)
+						.availability(MAX_CAPACITY- 2L)
 						.build());
 	}
 
 	@Test
+	public void testGetAvailabilityFor30Days_fetchesMultiplePagesUntilEmptyAndReturnsAvailabilityFor30Days() {
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().plusDays(30))
+				.build();
+		// We create 30 reservations, each one starting on one day and finishing the next day
+		List<Reservation> completeReservations = basicReservationsWithinRange(dateRange);
+		List<Reservation> firstChunk = completeReservations.subList(0, PAGE_SIZE);
+		List<Reservation> secondChunk = completeReservations.subList(PAGE_SIZE, (PAGE_SIZE * 2));
+		List<Reservation> thirdChunk = completeReservations.subList(PAGE_SIZE * 2, (PAGE_SIZE * 3));
+		List<List<Reservation>> chunksList = Arrays.asList(firstChunk, secondChunk, thirdChunk);
+		// We'll receive a Page<Reservation> only three times, and then an empty Page
+		when(reservationRepository.findReservationsByDateRangeAndStatus(eq(dateRange.getStart()), eq(dateRange.getEnd()), eq(ReservationStatus.ACTIVE), any(Pageable.class)))
+				.thenAnswer(new Answer<Object>() {
+					private int callNumber = 0;
+
+					@Override
+					public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+						Pageable pageable = new PageRequest(callNumber, 10);
+						if (callNumber < 3) {
+							List<Reservation> chunk = chunksList.get(callNumber);
+							callNumber++;
+							return new PageImpl<>(chunk, pageable, chunk.size());
+						} else {
+							return new PageImpl<>(Lists.newArrayList(), pageable, 0);
+						}
+					}});
+
+		Set<ReservationAvailability> availabilitySet = reservationService.getAvailability(dateRange);
+
+		verify(reservationRepository, times(4)).findReservationsByDateRangeAndStatus(eq(dateRange.getStart()), eq(dateRange.getEnd()), eq(ReservationStatus.ACTIVE), any(Pageable.class));
+		DateUtils.daysBetween(dateRange).forEach(localDate -> assertThat(availabilitySet)
+				.containsOnlyOnce(ReservationAvailability.builder()
+						.date(localDate)
+						.availability(MAX_CAPACITY - 1L)
+						.build()));
+	}
+
+	@Test
 	public void testGetAvailabilityWithInvalidRange_throwsInvalidRangeException() {
-		LocalDate startDate = LocalDate.now();
-		LocalDate endDate = startDate.minusDays(1);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().minusDays(1))
+				.build();
 
 		try {
-			reservationService.getAvailability(startDate, endDate);
+			reservationService.getAvailability(dateRange);
 			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
 		} catch (InvalidRangeException e) {
 			verify(reservationRepository, never()).findReservationsByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class), any(Pageable.class));
 			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-			assertThat(e.getMessage()).contains(startDate.toString(), endDate.toString());
+			assertThat(e.getMessage()).contains(dateRange.getStart().toString(), dateRange.getEnd().toString());
 		}
 	}
 

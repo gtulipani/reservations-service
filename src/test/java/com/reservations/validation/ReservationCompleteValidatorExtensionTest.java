@@ -20,6 +20,7 @@ import org.springframework.context.MessageSource;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.reservations.entity.DateRange;
 import com.reservations.entity.Reservation;
 import com.reservations.exception.ReservationValidationException;
 import com.reservations.service.ReservationServiceImpl;
@@ -58,10 +59,12 @@ public class ReservationCompleteValidatorExtensionTest {
 
 	@Test
 	public void testReservationBeforeMinimumAheadDays_throwsReservationValidationException() {
-		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS - 1);
-		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
-		Reservation reservation = basicReservation(arrivalDate, departureDate);
-		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).minusDays(1))
+				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).minusDays(1).plusDays(MIN_DURATION))
+				.build();
+		Reservation reservation = basicReservation(dateRange);
+		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -73,10 +76,12 @@ public class ReservationCompleteValidatorExtensionTest {
 
 	@Test
 	public void testReservationAfterMaximumAdvanceDays_throwsReservationValidationException() {
-		LocalDate arrivalDate = LocalDate.now().plusDays(MAX_ADVANCE_DAYS + 1);
-		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
-		Reservation reservation = basicReservation(arrivalDate, departureDate);
-		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(MAX_ADVANCE_DAYS).plusDays(1))
+				.end(LocalDate.now().plusDays(MAX_ADVANCE_DAYS).plusDays(1).plusDays(MIN_DURATION))
+				.build();
+		Reservation reservation = basicReservation(dateRange);
+		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -88,10 +93,12 @@ public class ReservationCompleteValidatorExtensionTest {
 
 	@Test
 	public void testReservationWithLessDurationThanMinimum_throwsReservationValidationException() {
-		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS);
-		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION - 1);
-		Reservation reservation = basicReservation(arrivalDate, departureDate);
-		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS))
+				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).plusDays(MIN_DURATION).minusDays(1))
+				.build();
+		Reservation reservation = basicReservation(dateRange);
+		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -103,10 +110,12 @@ public class ReservationCompleteValidatorExtensionTest {
 
 	@Test
 	public void testReservationWithMoreDurationThanMaximum_throwsReservationValidationException() {
-		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS);
-		LocalDate departureDate = arrivalDate.plusDays(MAX_DURATION + 1);
-		Reservation reservation = basicReservation(arrivalDate, departureDate);
-		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS))
+				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).plusDays(MAX_DURATION).plusDays(1))
+				.build();
+		Reservation reservation = basicReservation(dateRange);
+		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -118,10 +127,12 @@ public class ReservationCompleteValidatorExtensionTest {
 
 	@Test
 	public void testReservationBeforeMinimumAheadDaysAndWithLessDurationThanMinimum_throwsReservationValidationException() {
-		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS - 1);
-		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION - 1);
-		Reservation reservation = basicReservation(arrivalDate, departureDate);
-		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).minusDays(1))
+				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).minusDays(1).plusDays(MIN_DURATION).minusDays(1))
+				.build();
+		Reservation reservation = basicReservation(dateRange);
+		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -135,10 +146,12 @@ public class ReservationCompleteValidatorExtensionTest {
 
 	@Test
 	public void testReservationAfterMaximumAdvanceDaysAndWithMoreDurationThanMaximum_throwsReservationValidationException() {
-		LocalDate arrivalDate = LocalDate.now().plusDays(MAX_ADVANCE_DAYS + 1);
-		LocalDate departureDate = arrivalDate.plusDays(MAX_DURATION + 1);
-		Reservation reservation = basicReservation(arrivalDate, departureDate);
-		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(true);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(MAX_ADVANCE_DAYS).plusDays(1))
+				.end(LocalDate.now().plusDays(MAX_ADVANCE_DAYS).plusDays(1).plusDays(MAX_DURATION).plusDays(1))
+				.build();
+		Reservation reservation = basicReservation(dateRange);
+		when(reservationService.checkAvailability(dateRange)).thenReturn(true);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);
@@ -152,10 +165,12 @@ public class ReservationCompleteValidatorExtensionTest {
 
 	@Test
 	public void testReservationWithoutAvailability_throwsReservationValidationException() {
-		LocalDate arrivalDate = LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS);
-		LocalDate departureDate = arrivalDate.plusDays(MIN_DURATION);
-		Reservation reservation = basicReservation(arrivalDate, departureDate);
-		when(reservationService.checkAvailability(arrivalDate, departureDate)).thenReturn(false);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS))
+				.end(LocalDate.now().plusDays(MIN_ARRIVAL_AHEAD_DAYS).plusDays(MIN_DURATION))
+				.build();
+		Reservation reservation = basicReservation(dateRange);
+		when(reservationService.checkAvailability(dateRange)).thenReturn(false);
 
 		try {
 			reservationCompleteValidatorExtension.validate(reservation);

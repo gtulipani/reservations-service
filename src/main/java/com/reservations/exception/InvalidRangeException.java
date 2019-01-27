@@ -6,11 +6,13 @@ import lombok.Getter;
 
 import org.springframework.http.HttpStatus;
 
+import com.reservations.entity.DateRange;
+
 @Getter
 public class InvalidRangeException extends ReservationServiceException {
-	public InvalidRangeException(LocalDate start, LocalDate end) {
+	public InvalidRangeException(DateRange dateRange) {
 		super(HttpStatus.BAD_REQUEST, String.format("Invalid range: endDate=%s must be greater or equal than startDate=%s",
-				start,
-				end));
+				dateRange.getEnd(),
+				dateRange.getStart()));
 	}
 }

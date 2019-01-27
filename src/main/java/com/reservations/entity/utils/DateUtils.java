@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import com.google.common.collect.Lists;
+import com.reservations.entity.DateRange;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DateUtils {
@@ -49,5 +50,12 @@ public class DateUtils {
 		return Stream.iterate(start, date -> date.plusDays(1))
 				.limit(start.isEqual(end) ? 1 : ChronoUnit.DAYS.between(start, end))
 				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Returns a {@link List} with all the dates within a range
+	 */
+	public static List<LocalDate> daysBetween(DateRange dateRange) {
+		return daysBetween(dateRange.getStart(), dateRange.getEnd());
 	}
 }

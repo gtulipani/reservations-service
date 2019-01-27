@@ -22,6 +22,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Sets;
+import com.reservations.entity.DateRange;
 import com.reservations.entity.Reservation;
 import com.reservations.entity.ReservationStatus;
 import com.reservations.exception.InvalidRangeException;
@@ -46,27 +47,31 @@ public class ReservationControllerImplTest {
 
 	@Test
 	public void testGetAvailability_returnsCorrespondingResponseStatusAndResponseBodyWhenInvalidRangeExceptionIsThrown() throws Exception {
-		LocalDate start = LocalDate.now();
-		LocalDate end = start.plusDays(AVAILABILITY_DEFAULT_DAYS);
-		InvalidRangeException exception = new InvalidRangeException(start, end);
-		when(reservationService.getAvailability(start, end)).thenThrow(exception);
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().plusDays(AVAILABILITY_DEFAULT_DAYS))
+				.build();
+		InvalidRangeException exception = new InvalidRangeException(dateRange);
+		when(reservationService.getAvailability(dateRange)).thenThrow(exception);
 
-		ResponseEntity responseEntity = reservationControllerImpl.getAvailability(start, end).call();
+		ResponseEntity responseEntity = reservationControllerImpl.getAvailability(dateRange.getStart(), dateRange.getEnd()).call();
 
-		verify(reservationService, times(1)).getAvailability(start, end);
+		verify(reservationService, times(1)).getAvailability(dateRange);
 		assertThat(responseEntity.getStatusCode()).isEqualByComparingTo(exception.getResponseStatus());
 		assertThat(responseEntity.getBody()).isEqualTo(exception.getResponseBody());
 	}
 
 	@Test
 	public void testGetAvailability_returnsInternalServerErrorWhenExceptionIsThrownInService() throws Exception {
-		LocalDate start = LocalDate.now();
-		LocalDate end = start.plusDays(AVAILABILITY_DEFAULT_DAYS);
-		when(reservationService.getAvailability(start, end)).thenThrow(new NullPointerException(DEFAULT_ERROR_MESSAGE));
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().plusDays(AVAILABILITY_DEFAULT_DAYS))
+				.build();
+		when(reservationService.getAvailability(dateRange)).thenThrow(new NullPointerException(DEFAULT_ERROR_MESSAGE));
 
-		ResponseEntity responseEntity = reservationControllerImpl.getAvailability(start, end).call();
+		ResponseEntity responseEntity = reservationControllerImpl.getAvailability(dateRange.getStart(), dateRange.getEnd()).call();
 
-		verify(reservationService, times(1)).getAvailability(start, end);
+		verify(reservationService, times(1)).getAvailability(dateRange);
 		assertThat(responseEntity.getStatusCode()).isEqualByComparingTo(HttpStatus.INTERNAL_SERVER_ERROR);
 		assertThat(responseEntity.getBody()).isEqualTo(DEFAULT_ERROR_MESSAGE);
 	}
