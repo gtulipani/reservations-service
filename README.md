@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/gtulipani/reservations-service.svg?branch=master)](https://travis-ci.com/gtulipani/reservations-service)
 # reservations-service
 
 ## Description
@@ -127,6 +128,8 @@ place. Currently **12**.
 cancellation can take place. Currently **00**.
 
 ## CI
+Travis CI has been chosen as CI Software. It's already configured and runs all the UT for every PR and Build (including
+`master`). The status can be found at the top of this file.
 
 ## More Stats
 The project includes a total of **87** Unit Tests. The total Coverage is **92%**, where all classes have **100%**
