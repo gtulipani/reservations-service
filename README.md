@@ -126,6 +126,8 @@ place. Currently **12**.
 - `reservations.check-in-time-minute`: minute of the hour of the day for check-in. This is used ti validate if the
 cancellation can take place. Currently **00**.
 
+## CI
+
 ## More Stats
 The project includes a total of **87** Unit Tests. The total Coverage is **92%**, where all classes have **100%**
 coverage, except from `Application.java` (main Spring Boot Application class) and `ReservationValidatorConstants.java`
