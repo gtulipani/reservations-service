@@ -10,7 +10,7 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/reservations-service?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/reservations_service?createDatabaseIfNotExist=true
     username: root
     password: password
     max-active: 20

@@ -131,7 +131,7 @@ public class ReservationServiceImplTest {
 	}
 
 	@Test
-	public void testGetAvailabilityForTodayAndTomorrow_fetchesPagesUntilEmptyAndReturnsAvailabilityForToday() {
+	public void testGetAvailabilityForTodayAndTomorrow_fetchesPagesUntilEmptyAndReturnsAvailabilityForTodayAndTomorrow() {
 		DateRange dateRange = DateRange.builder()
 				.start(LocalDate.now())
 				.end(LocalDate.now().plusDays(1))
@@ -159,17 +159,26 @@ public class ReservationServiceImplTest {
 		Set<ReservationAvailability> availabilitySet = reservationService.getAvailability(dateRange);
 
 		verify(reservationRepository, times(2)).findReservationsByDateRangeAndStatus(eq(dateRange.getStart()), eq(dateRange.getEnd()), eq(ReservationStatus.ACTIVE), any(Pageable.class));
-		assertThat(availabilitySet).containsOnlyOnce(ReservationAvailability.builder()
+		// Contains one more date because the range is inclusive
+		assertThat(availabilitySet.size()).isEqualTo(2);
+		// It's occupied the first date but free the second date (it's the departure date from both reservations)
+		assertThat(availabilitySet).containsOnlyOnce(
+				ReservationAvailability.builder()
 						.date(firstReservation.getArrivalDate())
 						.availability(MAX_CAPACITY- 2L)
+						.build(),
+				ReservationAvailability.builder()
+						.date(firstReservation.getDepartureDate())
+						.availability(MAX_CAPACITY)
 						.build());
 	}
 
 	@Test
-	public void testGetAvailabilityFor30Days_fetchesMultiplePagesUntilEmptyAndReturnsAvailabilityFor30Days() {
+	public void testGetAvailabilityFor30Days_fetchesMultiplePagesUntilEmptyAndReturnsAvailabilityFor31Days() {
+		int datesQuantity = 30;
 		DateRange dateRange = DateRange.builder()
 				.start(LocalDate.now())
-				.end(LocalDate.now().plusDays(30))
+				.end(LocalDate.now().plusDays(datesQuantity))
 				.build();
 		// We create 30 reservations, each one starting on one day and finishing the next day
 		List<Reservation> completeReservations = basicReservationsWithinRange(dateRange);
@@ -197,11 +206,19 @@ public class ReservationServiceImplTest {
 		Set<ReservationAvailability> availabilitySet = reservationService.getAvailability(dateRange);
 
 		verify(reservationRepository, times(4)).findReservationsByDateRangeAndStatus(eq(dateRange.getStart()), eq(dateRange.getEnd()), eq(ReservationStatus.ACTIVE), any(Pageable.class));
+		// Contains one more because the range is inclusive
+		assertThat(availabilitySet.size()).isEqualTo(datesQuantity + 1);
+		// For each date between the start and the end (exclusive) it's occupied with one reservation
 		DateUtils.daysBetween(dateRange).forEach(localDate -> assertThat(availabilitySet)
 				.containsOnlyOnce(ReservationAvailability.builder()
 						.date(localDate)
 						.availability(MAX_CAPACITY - 1L)
 						.build()));
+		// The end date is not occupied (it's the departure date from the last reservation)
+		assertThat(availabilitySet).containsOnlyOnce(ReservationAvailability.builder()
+				.date(dateRange.getEnd())
+				.availability(MAX_CAPACITY)
+				.build());
 	}
 
 	@Test

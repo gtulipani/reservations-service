@@ -120,7 +120,7 @@ public class ReservationServiceImpl implements ReservationService {
 		Map<LocalDate, Long> availabilityMap = Maps.newHashMap();
 		int pageNumber = 0;
 		int pageSize = 10;
-		List<LocalDate> desiredDates = DateUtils.daysBetween(dateRange);
+		List<LocalDate> desiredDates = DateUtils.daysBetweenInclusive(dateRange);
 		List<Reservation> reservations;
 		do {
 			reservations = reservationRepository.findReservationsByDateRangeAndStatus(dateRange.getStart(), dateRange.getEnd(), ReservationStatus.ACTIVE, new PageRequest(pageNumber++, pageSize)).getContent();

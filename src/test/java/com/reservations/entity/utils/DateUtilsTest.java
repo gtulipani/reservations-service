@@ -141,4 +141,62 @@ public class DateUtilsTest {
 
 		assertThat(DateUtils.daysBetween(dateRange)).isEmpty();
 	}
+
+	@Test
+	public void testDaysBetweenInclusiveTodayAndTomorrow_includesTomorrow() {
+		LocalDate today = LocalDate.now();
+		LocalDate tomorrow = today.plusDays(1);
+
+		assertThat(DateUtils.daysBetweenInclusive(today, tomorrow)).containsExactlyInAnyOrder(today, tomorrow);
+	}
+
+	@Test
+	public void testDaysBetweenInclusiveTodayAndToday_includesToday() {
+		LocalDate today = LocalDate.now();
+
+		assertThat(DateUtils.daysBetweenInclusive(today, today)).containsOnlyOnce(today);
+	}
+
+	@Test
+	public void testDaysBetweenInclusiveTodayAndYesterday_isEmpty() {
+		LocalDate today = LocalDate.now();
+		LocalDate yesterday = today.minusDays(1);
+
+		assertThat(DateUtils.daysBetweenInclusive(today, yesterday)).isEmpty();
+	}
+
+	@Test
+	public void testDaysBetweenInclusiveRangeWithTodayAndTomorrow_includesTomorrow() {
+		LocalDate today = LocalDate.now();
+		LocalDate tomorrow = today.plusDays(1);
+		DateRange dateRange = DateRange.builder()
+				.start(today)
+				.end(tomorrow)
+				.build();
+
+		assertThat(DateUtils.daysBetweenInclusive(dateRange)).containsExactlyInAnyOrder(today, tomorrow);
+	}
+
+	@Test
+	public void testDaysBetweenInclusiveRangeWithTodayAndToday_includesToday() {
+		LocalDate today = LocalDate.now();
+		DateRange dateRange = DateRange.builder()
+				.start(today)
+				.end(today)
+				.build();
+
+		assertThat(DateUtils.daysBetweenInclusive(dateRange)).containsOnlyOnce(today);
+	}
+
+	@Test
+	public void testDaysBetweenInclusiveRangeWithTodayAndYesterday_isEmpty() {
+		LocalDate today = LocalDate.now();
+		LocalDate yesterday = today.minusDays(1);
+		DateRange dateRange = DateRange.builder()
+				.start(today)
+				.end(yesterday)
+				.build();
+
+		assertThat(DateUtils.daysBetweenInclusive(dateRange)).isEmpty();
+	}
 }

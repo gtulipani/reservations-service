@@ -40,22 +40,53 @@ public class DateUtils {
 	}
 
 	/**
-	 * Returns a {@link List} with all the dates within a range
+	 * Returns a {@link List} with all the dates within a range. It's exclusive, meaning that the end is not included.
+	 * The end is only included when start and end are the same day.
 	 */
 	public static List<LocalDate> daysBetween(LocalDate start, LocalDate end) {
-		if (start.isAfter(end)) {
+		if (rangeInvalid(start, end)) {
 			return Lists.newArrayList();
 		}
-		// ChronoUnit.DAYS.between() is exclusive. If start == end we want to return one date
+		// ChronoUnit.DAYS.between() is exclusive.
+		return start.isEqual(end) ?
+				daysBetweenInclusive(start, end) :
+				Stream.iterate(start, date -> date.plusDays(1))
+						.limit(ChronoUnit.DAYS.between(start, end))
+						.collect(Collectors.toList());
+	}
+
+	/**
+	 * Returns a {@link List} with all the dates within a range. It's exclusive, meaning that the end is not included.
+	 * The end is only included when start and end are the same day.
+	 */
+	public static List<LocalDate> daysBetween(DateRange dateRange) {
+		return daysBetween(dateRange.getStart(), dateRange.getEnd());
+	}
+
+	/**
+	 * Returns a {@link List} with all the dates within a range. It's incluse, meaning that the end is also included.
+	 */
+	public static List<LocalDate> daysBetweenInclusive(LocalDate start, LocalDate end) {
+		if (rangeInvalid(start, end)) {
+			return Lists.newArrayList();
+		}
+		// ChronoUnit.DAYS.between() is exclusive. So we sum 1 to the limit
 		return Stream.iterate(start, date -> date.plusDays(1))
-				.limit(start.isEqual(end) ? 1 : ChronoUnit.DAYS.between(start, end))
+				.limit(ChronoUnit.DAYS.between(start, end) + 1)
 				.collect(Collectors.toList());
 	}
 
 	/**
-	 * Returns a {@link List} with all the dates within a range
+	 * Returns a {@link List} with all the dates within a range. It's incluse, meaning that the end is also included.
 	 */
-	public static List<LocalDate> daysBetween(DateRange dateRange) {
-		return daysBetween(dateRange.getStart(), dateRange.getEnd());
+	public static List<LocalDate> daysBetweenInclusive(DateRange dateRange) {
+		return daysBetweenInclusive(dateRange.getStart(), dateRange.getEnd());
+	}
+
+	/**
+	 * Checks if the range is valid
+	 */
+	private static boolean rangeInvalid(LocalDate start, LocalDate end) {
+		return start.isAfter(end);
 	}
 }
