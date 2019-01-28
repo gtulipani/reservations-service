@@ -150,6 +150,6 @@ cancellation can take place. Currently **00**.
 every PR and Build (including `master`). The status can be found at the top of this file.
 
 ## More Stats
-The project includes a total of **87** Unit Tests. The total Coverage is **92%**, where all classes have **100%**
+The project includes a total of **97** Unit Tests. The total Coverage is **92%**, where all classes have **100%**
 coverage, except from `Application.java` (main Spring Boot Application class) and `ReservationValidatorConstants.java`
 classes.
