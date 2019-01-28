@@ -79,59 +79,18 @@
 					],
 					"cookie": [],
 					"body": "[\n    {\n        \"date\": [\n            2019,\n            1,\n            27\n        ],\n        \"availability\": 9\n    },\n    {\n        \"date\": [\n            2019,\n            1,\n            28\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            1,\n            29\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            1,\n            30\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            1,\n            31\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            1\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            2\n        ],\n        \"availability\": 9\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            3\n        ],\n        \"availability\": 0\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            4\n        ],\n        \"availability\": 0\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            5\n        ],\n        \"availability\": 9\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            6\n        ],\n        \"availability\": 9\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            7\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            8\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            9\n        ],\n        \"availability\": 0\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            10\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            11\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            12\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            13\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            14\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            15\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            16\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            17\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            18\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            19\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            20\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            21\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            22\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            23\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            24\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            25\n        ],\n        \"availability\": 10\n    }\n]"
-				}
-			]
-		},
-		{
-			"name": "POST /reservations",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\": \"gaston.a.tulipani@gmail.com\",\n    \"fullName\": \"Gaston Tulipani\",\n    \"arrivalDate\": \"02-11-2019\",\n    \"departureDate\": \"02-12-2019\"\n}"
 				},
-				"url": {
-					"raw": "http://localhost:8090/api/v1/reservations",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8090",
-					"path": [
-						"api",
-						"v1",
-						"reservations"
-					]
-				},
-				"description": "API to create a new reservation"
-			},
-			"response": [
 				{
-					"name": "POST /reservations - Example 1",
+					"name": "GET /reservations/availability - Example 2 (Filters)",
 					"originalRequest": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
+						"method": "GET",
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"gaston.a.tulipani@gmail.com\",\n    \"fullName\": \"Gaston Tulipani\",\n    \"arrivalDate\": \"02-11-2019\",\n    \"departureDate\": \"02-12-2019\"\n}"
+							"raw": ""
 						},
 						"url": {
-							"raw": "http://localhost:8090/api/v1/reservations",
+							"raw": "http://localhost:8090/api/v1/reservations/availability?start=02-03-2019&end=02-09-2019",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -140,12 +99,23 @@
 							"path": [
 								"api",
 								"v1",
-								"reservations"
+								"reservations",
+								"availability"
+							],
+							"query": [
+								{
+									"key": "start",
+									"value": "02-03-2019"
+								},
+								{
+									"key": "end",
+									"value": "02-09-2019"
+								}
 							]
 						}
 					},
-					"status": "Created",
-					"code": 201,
+					"status": "OK",
+					"code": 200,
 					"_postman_previewlanguage": "json",
 					"header": [
 						{
@@ -162,11 +132,79 @@
 						},
 						{
 							"key": "Date",
-							"value": "Sun, 27 Jan 2019 22:29:02 GMT"
+							"value": "Mon, 28 Jan 2019 11:40:00 GMT"
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"createdOn\": \"01-27-2019 07:29:02\",\n    \"lastModified\": \"01-27-2019 07:29:02\",\n    \"email\": \"gaston.a.tulipani@gmail.com\",\n    \"fullName\": \"Gaston Tulipani\",\n    \"status\": \"ACTIVE\",\n    \"arrivalDate\": \"02-11-2019\",\n    \"departureDate\": \"02-12-2019\",\n    \"bookingIdentifierUuid\": \"2b8ff730-0263-49f9-94f5-57ac4f89a851\"\n}"
+					"body": "[\n    {\n        \"date\": [\n            2019,\n            2,\n            3\n        ],\n        \"availability\": 0\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            4\n        ],\n        \"availability\": 0\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            5\n        ],\n        \"availability\": 9\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            6\n        ],\n        \"availability\": 9\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            7\n        ],\n        \"availability\": 10\n    },\n    {\n        \"date\": [\n            2019,\n            2,\n            8\n        ],\n        \"availability\": 10\n    }\n]"
+				}
+			]
+		},
+		{
+			"name": "DELETE /reservations/{bookingIdentifierUuid}",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://localhost:8090/api/v1/reservations/2b8ff730-0263-49f9-94f5-57ac4f89a851",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"api",
+						"v1",
+						"reservations",
+						"2b8ff730-0263-49f9-94f5-57ac4f89a851"
+					]
+				},
+				"description": "API to cancel an existing reservation"
+			},
+			"response": [
+				{
+					"name": "DELETE /reservations/{bookingIdentifierUuid} - Example 1",
+					"originalRequest": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8090/api/v1/reservations/2b8ff730-0263-49f9-94f5-57ac4f89a851",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"api",
+								"v1",
+								"reservations",
+								"2b8ff730-0263-49f9-94f5-57ac4f89a851"
+							]
+						}
+					},
+					"status": "No Content",
+					"code": 204,
+					"_postman_previewlanguage": "plain",
+					"header": [
+						{
+							"key": "X-Application-Context",
+							"value": "application:8090"
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 27 Jan 2019 22:34:16 GMT"
+						}
+					],
+					"cookie": [],
+					"body": null
 				}
 			]
 		},
@@ -261,16 +299,23 @@
 			]
 		},
 		{
-			"name": "DELETE /reservations/{bookingIdentifierUuid}",
+			"name": "POST /reservations",
 			"request": {
-				"method": "DELETE",
-				"header": [],
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": ""
+					"raw": "{\n    \"email\": \"gaston.a.tulipani@gmail.com\",\n    \"fullName\": \"Gaston Tulipani\",\n    \"arrivalDate\": \"02-11-2019\",\n    \"departureDate\": \"02-12-2019\"\n}"
 				},
 				"url": {
-					"raw": "http://localhost:8090/api/v1/reservations/2b8ff730-0263-49f9-94f5-57ac4f89a851",
+					"raw": "http://localhost:8090/api/v1/reservations",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -279,24 +324,30 @@
 					"path": [
 						"api",
 						"v1",
-						"reservations",
-						"2b8ff730-0263-49f9-94f5-57ac4f89a851"
+						"reservations"
 					]
 				},
-				"description": "API to cancel an existing reservation"
+				"description": "API to create a new reservation"
 			},
 			"response": [
 				{
-					"name": "DELETE /reservations/{bookingIdentifierUuid} - Example 1",
+					"name": "POST /reservations - Example 1",
 					"originalRequest": {
-						"method": "DELETE",
-						"header": [],
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": ""
+							"raw": "{\n    \"email\": \"gaston.a.tulipani@gmail.com\",\n    \"fullName\": \"Gaston Tulipani\",\n    \"arrivalDate\": \"02-11-2019\",\n    \"departureDate\": \"02-12-2019\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:8090/api/v1/reservations/2b8ff730-0263-49f9-94f5-57ac4f89a851",
+							"raw": "http://localhost:8090/api/v1/reservations",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -305,26 +356,33 @@
 							"path": [
 								"api",
 								"v1",
-								"reservations",
-								"2b8ff730-0263-49f9-94f5-57ac4f89a851"
+								"reservations"
 							]
 						}
 					},
-					"status": "No Content",
-					"code": 204,
-					"_postman_previewlanguage": "plain",
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
 					"header": [
 						{
 							"key": "X-Application-Context",
 							"value": "application:8090"
 						},
 						{
+							"key": "Content-Type",
+							"value": "application/json;charset=UTF-8"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
 							"key": "Date",
-							"value": "Sun, 27 Jan 2019 22:34:16 GMT"
+							"value": "Sun, 27 Jan 2019 22:29:02 GMT"
 						}
 					],
 					"cookie": [],
-					"body": null
+					"body": "{\n    \"createdOn\": \"01-27-2019 07:29:02\",\n    \"lastModified\": \"01-27-2019 07:29:02\",\n    \"email\": \"gaston.a.tulipani@gmail.com\",\n    \"fullName\": \"Gaston Tulipani\",\n    \"status\": \"ACTIVE\",\n    \"arrivalDate\": \"02-11-2019\",\n    \"departureDate\": \"02-12-2019\",\n    \"bookingIdentifierUuid\": \"2b8ff730-0263-49f9-94f5-57ac4f89a851\"\n}"
 				}
 			]
 		}

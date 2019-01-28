@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +42,8 @@ public class ReservationControllerImpl implements ReservationController {
 
 	@Override
 	@RequestMapping(method = RequestMethod.GET, value = "/availability")
-	public Callable<ResponseEntity> getAvailability(@RequestParam(value = "start", required = false) LocalDate start,
-													@RequestParam(value = "end", required = false) LocalDate end) {
+	public Callable<ResponseEntity> getAvailability(@RequestParam(value = "start", required = false) @DateTimeFormat(pattern = "MM-dd-yyyy") LocalDate start,
+													@RequestParam(value = "end", required = false) @DateTimeFormat(pattern = "MM-dd-yyyy") LocalDate end) {
 		return () -> {
 			DateRange dateRange = DateRange.builder()
 					.start(start)
