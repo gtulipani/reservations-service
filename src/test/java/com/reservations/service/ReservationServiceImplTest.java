@@ -228,14 +228,17 @@ public class ReservationServiceImplTest {
 				.end(LocalDate.now().minusDays(1))
 				.build();
 
-		try {
-			reservationService.getAvailability(dateRange);
-			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
-		} catch (InvalidRangeException e) {
-			verify(reservationRepository, never()).findReservationsByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class), any(Pageable.class));
-			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-			assertThat(e.getMessage()).contains(dateRange.getStart().toString(), dateRange.getEnd().toString());
-		}
+		assertInvalidRangeException(dateRange);
+	}
+
+	@Test
+	public void testGetAvailabilityWithRangeInThePast_throwsInvalidRangeException() {
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().minusDays(1))
+				.end(LocalDate.now())
+				.build();
+
+		assertInvalidRangeException(dateRange);
 	}
 
 	@Test
@@ -414,6 +417,20 @@ public class ReservationServiceImplTest {
 		} catch (ReservationValidationException e) {
 			verify(reservationRepository, never()).save(any(Reservation.class));
 			assertThat(e.getErrors()).containsExactly(basicError());
+		}
+	}
+
+	/**
+	 * Checks that {@link InvalidRangeException} is thrown for the dateRange received as parameter
+	 */
+	private void assertInvalidRangeException(DateRange dateRange) {
+		try {
+			reservationService.getAvailability(dateRange);
+			failBecauseExceptionWasNotThrown(InvalidRangeException.class);
+		} catch (InvalidRangeException e) {
+			verify(reservationRepository, never()).findReservationsByDateRangeAndStatus(any(LocalDate.class), any(LocalDate.class), any(ReservationStatus.class), any(Pageable.class));
+			assertThat(e.getResponseStatus()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+			assertThat(e.getMessage()).contains(dateRange.getStart().toString(), dateRange.getEnd().toString());
 		}
 	}
 }

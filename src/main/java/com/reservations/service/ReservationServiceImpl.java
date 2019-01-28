@@ -154,7 +154,7 @@ public class ReservationServiceImpl implements ReservationService {
 	 * Checks if the {@link DateRange} is valid. Otherwise, throws a {@link InvalidRangeException}
 	 */
 	private void checkValidRange(DateRange dateRange) {
-		if (!dateRange.isValid()) {
+		if (!dateRange.isValid() || dateRange.isPast()) {
 			throw new InvalidRangeException(dateRange);
 		}
 	}

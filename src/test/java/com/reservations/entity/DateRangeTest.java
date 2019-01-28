@@ -36,4 +36,34 @@ public class DateRangeTest {
 
 		assertThat(dateRange.isValid()).isFalse();
 	}
+
+	@Test
+	public void testIsPast_startsBeforeToday_true() {
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().minusDays(1))
+				.end(LocalDate.now())
+				.build();
+
+		assertThat(dateRange.isPast()).isTrue();
+	}
+
+	@Test
+	public void testIsPast_startsToday_false() {
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now())
+				.end(LocalDate.now().plusDays(1))
+				.build();
+
+		assertThat(dateRange.isPast()).isFalse();
+	}
+
+	@Test
+	public void testIsPast_startsTomorrow_false() {
+		DateRange dateRange = DateRange.builder()
+				.start(LocalDate.now().plusDays(1))
+				.end(LocalDate.now().plusDays(2))
+				.build();
+
+		assertThat(dateRange.isPast()).isFalse();
+	}
 }
