@@ -10,7 +10,7 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/reservations_service?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/reservations-service?createDatabaseIfNotExist=true
     username: root
     password: password
     max-active: 20
@@ -84,7 +84,7 @@ reservations:
 spring:
   profiles: test
   datasource:
-    url: jdbc:h2:mem:reservations_service
+    url: jdbc:h2:mem:reservations-service
     username: user
     password: sa
     driver-class-name: org.h2.Driver
@@ -101,7 +101,7 @@ spring:
 spring:
   profiles: integration
   datasource:
-    url: jdbc:h2:mem:reservations_service
+    url: jdbc:h2:mem:reservations-service
     username: user
     password: sa
     driver-class-name: org.h2.Driver
