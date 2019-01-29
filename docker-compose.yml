@@ -18,9 +18,10 @@ services:
       dockerfile: Dockerfile
     image: reservations-service
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/reservations-service
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/reservations_service
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
+      - JAVA_OPTS=-Xms128M -Xmx256M -XX:MaxMetaspaceSize=128M
     depends_on:
       - mysql
     links:
@@ -29,3 +30,4 @@ services:
     - "8090"
     ports:
     - "8090:8090"
+    mem_limit: 512M

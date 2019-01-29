@@ -49,6 +49,28 @@ command must be executed in the root path:
 docker-compose up
 ```
 
+#### Locally using Kubernetes
+There is another alternative way to run the application with [Kubernetes](https://kubernetes.io/). It provides another
+abstraction layer from Docker or any other container-oriented application. The repo includes 3 different manifests:
+- **mysql-volume.yaml**: [PersistentVolume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) for the
+MySQL Database consumed by the service.
+- **mysql.yaml**: [Service](https://kubernetes.io/docs/concepts/services-networking/service/) and 
+[Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) from the MySQL DB. Also a 
+[Secrets](https://kubernetes.io/docs/concepts/configuration/secret/) is included to handle MySQL credentials.
+- **reservations-service.yaml**: Service and Deployment for the reservations-service. It's configured to support 2
+replicas and exposes the port `30161`. Also both [readinessProbe and livenessProbe](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)
+have been configured using the `/health` endpoint.
+
+The manifests must be executed in the same order as listed above to avoid issues. Each one of them must be started with
+the [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) command:
+```
+kubectl apply -f mysql-volume.yaml
+kubectl apply -f mysql.yaml
+kubectl apply -f reservations-service.yaml
+```
+The services status can be easily verified using the [Kubernetes Dashboard](https://github.com/kubernetes/dashboard). The
+result should be similar to: ![](https://i.imgur.com/QKfFOsy.png)
+
 ## Technologies
 ### Spring
 The Application is a standard [Spring Boot](https://spring.io/) Application and it's conformed by the following layers:
